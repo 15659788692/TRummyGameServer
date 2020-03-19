@@ -9,6 +9,10 @@ type DeskInfo struct {
 	SettleCoins   int64           `json:"settleCoins"`   //结算区金额
 	GameState     int32           `json:"gameState"`     //游戏状态
 	GameStateTime int32           `json:"gameStateTime"` //游戏状态时间
+	WildCard      int32           `json:"wildCard"`      //万能牌
+	ShowCard      int32           `json:"showCard"`      //show区的牌
+	PublicCard    int32           `json:"publicCard"`    //公摊牌	公摊牌的变化
+	CardsNum      int32           `json:"cardsNum"`      //牌堆剩余张数
 	OperSeatId    int32           `json:"operSeatId"`    //当前操作的玩家座位号
 	BankerSeatId  int32           `json:"bankerSeatId"`  //庄家的座位号
 	FirstSeatId   int32           `json:"firstSeatId"`   //首出玩家的座位号
@@ -115,33 +119,51 @@ type NotifyPlayerSitdown struct {
 //游戏部分
 //操作牌
 type GOperCardRequest struct {
-	Opertion int32 //摸牌操作   1.摸公摊牌   2.摸牌堆里的牌   3.出牌到公摊区   4.出牌到Show
-	OperCard int32 //获得的牌		12为0	34为牌值
+	Opertion int32 //摸牌操作   1.摸公摊牌   2.摸牌堆里的牌   3.出牌到公摊区   4.出牌到Show	  5.弃牌
+	OperCard int32 //获得的牌		125为0	34为牌值
 }
 
 type GOperCardResponse struct {
 	Opertion   int32  //摸牌操作   -1.网络错误  0.操作错误  1.摸公摊牌   2.摸牌堆里的牌   3.出牌到公摊区   4.出牌到Show
-	OperCard   int32  //获得的牌
+	OperCard   int32  //操作的牌
 	PublicCard int32  //公摊牌
+	CardsNum   int32  //牌堆剩余牌的数量
 	Error      string //报错信息
 }
 
-//show
-type GShowCardsRequest struct {
-	ShowCards [][]int32
+type GSetHandCardRequest struct {
+	CardsSets []CardsSet
+	IsFinish  bool
 }
 
-type GShowCardsResponse struct {
-	IsWin bool
-	Error string //报错信息
+type CardsSet struct {
+	Cards []int32
+	Type  int32
+	Point int32
+}
+
+type GSetHandCardResponse struct {
+	Success    bool //是否成功
+	CardsSets  []CardsSet
+	TotalPoint int32
+	Error      string //报错信息
 }
 
 //结算
 type GSettleRequect struct {
-	ShowCards [][]int32
+	Cards [][]int32
 }
 
 type GSettleResponse struct {
 	WinCoins int64
 	Error    string //报错信息
+}
+
+//放弃
+type GGiveUpRequect struct {
+}
+
+type GGiveUpResponse struct {
+	Success bool //是否成功
+	Coins   int64
 }

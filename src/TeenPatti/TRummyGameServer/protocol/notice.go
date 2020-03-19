@@ -44,16 +44,31 @@ type GPlayerOperNotice struct {
 	Opertion   int32 //摸牌操作	1.摸公摊牌   2.摸牌堆里的牌   3.出牌到牌堆   4.出牌到Show
 	OperCard   int32 //操作的牌	如果Opertion是2，则OperCard为 0，
 	PublicCard int32 //公摊牌	公摊牌的变化
-}
-
-//推送回合结束
-type GPlayEndNotice struct {
-	Opertions  []int32
-	OperCard   []int32
-	PublicCard []int32 //公摊牌	公摊牌的变化
+	CardsNum   int32 //牌堆剩余张数
 }
 
 //胡牌广播
 type GPlayerWinNotice struct {
 	SeatId int32 //座位号
+}
+
+//放弃广播
+type GGiveUpNotice struct {
+	SeatId      int32 //	玩家座位号
+	LosingCoins int64 //	玩家输的金额
+	PlayerCoins int64 //	玩家当前金额
+	IsShow      bool  //	是否是show
+}
+
+//结算界面广播
+type GEndForm struct {
+	EndInfo []PlayerEndInfo
+}
+
+type PlayerEndInfo struct {
+	Name      string
+	Head      string
+	CardsSets [][]int32
+	Point     int32
+	Coins     int64
 }

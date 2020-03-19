@@ -29,7 +29,7 @@ func (this *Desk) DoTimer() {
 		}
 		this.TList = nlist
 		for _, v := range olist {
-			v.H(v.D)
+			go v.H(v.D)
 		}
 		time.Sleep(time.Duration(1) * time.Second)
 	}

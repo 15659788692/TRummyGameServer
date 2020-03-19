@@ -294,27 +294,68 @@ func (this *TRDeskManager) OperCard(s *session.Session, msg *protocol.GOperCardR
 			Error:    "玩家没有加入桌子！",
 		})
 	}
-	return p.desk.OperCard(p, msg)
+	return p.desk.OperCard(p, msg, false)
 }
 
 //show请求
-func (this *TRDeskManager) ShowCard(s *session.Session, msg *protocol.GShowCardsRequest) error {
+func (this *TRDeskManager) ShowCard(s *session.Session, msg *protocol.GSetHandCardRequest) error {
 	//检测消息
 	p, err := this.checkSessionAuther(s)
 	if err != nil {
 		logger.Warnf("ShowCard Error:", s.UID())
-		return s.Response(&protocol.GShowCardsResponse{
-			IsWin: false,
-			Error: autherNotAvailMessage,
+		return s.Response(&protocol.GSetHandCardResponse{
+			Success: false,
+			Error:   autherNotAvailMessage,
 		})
 	}
 	//检测玩家是否在桌子中
 	if p.desk == nil {
 		logger.Debug("ShowCard Error:", s.UID())
-		return s.Response(&protocol.GShowCardsResponse{
-			IsWin: false,
-			Error: "玩家没有加入桌子！",
+		return s.Response(&protocol.GSetHandCardResponse{
+			Success: false,
+			Error:   "玩家没有加入桌子！",
 		})
 	}
 	return p.desk.ShowCards(p, msg)
+}
+
+func (this *TRDeskManager) Settle(s *session.Session, msg *protocol.GSettleRequect) error {
+	//检测消息
+	p, err := this.checkSessionAuther(s)
+	if err != nil {
+		logger.Warnf("ShowCard Error:", s.UID())
+		return s.Response(&protocol.GSettleResponse{
+			WinCoins: 0,
+			Error:    autherNotAvailMessage,
+		})
+	}
+	//检测玩家是否在桌子中
+	if p.desk == nil {
+		logger.Debug("ShowCard Error:", s.UID())
+		return s.Response(&protocol.GSettleResponse{
+			WinCoins: 0,
+			Error:    "玩家没有加入桌子！",
+		})
+	}
+	return p.desk.Settle(p, msg, false)
+}
+
+//放弃
+func (this *TRDeskManager) GiveUp(s *session.Session, msg *protocol.GGiveUpRequect) error {
+	//检测消息
+	p, err := this.checkSessionAuther(s)
+	if err != nil {
+		logger.Warnf("ShowCard Error:", s.UID())
+		return s.Response(&protocol.GGiveUpResponse{
+			Success: false,
+		})
+	}
+	//检测玩家是否在桌子中
+	if p.desk == nil {
+		logger.Debug("ShowCard Error:", s.UID())
+		return s.Response(&protocol.GGiveUpResponse{
+			Success: false,
+		})
+	}
+	return p.desk.GiveUp(p, false)
 }

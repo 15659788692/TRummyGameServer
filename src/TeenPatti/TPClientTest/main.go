@@ -30,10 +30,10 @@ func main() {
 
 //--------------------------------------------------------------------
 const (
-	//addr = "192.168.16.192:3000" // local address
+	addr = "192.168.0.141:3000" // local address
 
-	addr = "127.0.0.1:3000" // local address
-	conc = 1000             // concurrent client count
+	// addr = "127.0.0.1:3000" // local address
+	conc = 1000 // concurrent client count
 )
 
 var clientHander *io.Connector
@@ -56,7 +56,7 @@ func TestClient() {
 
 	time.Sleep(time.Second / 2)
 
-	c.On("TPGame.BroadDeskPlayersInfo", OnBroadMessage)
+	c.On("TRGame.BroadDeskPlayersInfo", OnBroadMessage)
 
 	//发送登陆消息
 	loginServer := &protocol.LoginToGameServerRequest{}
@@ -64,12 +64,12 @@ func TestClient() {
 	loginServer.Token = 123456
 	loginServer.Uid = 12234344 + int64(time.Now().Second()%100)
 
-	//time.Sleep( time.Second )
-
+	// time.Sleep(time.Second)
+	fmt.Println("1")
 	//发送登陆请求
-	c.Request("TPManager.Login", loginServer, testLoginResponse)
+	c.Request("TRManager.Login", loginServer, testLoginResponse)
 
-	<-chReady
+	fmt.Println("连接：", <-chReady)
 
 	for {
 		time.Sleep(10 * time.Millisecond)

@@ -56,7 +56,7 @@ func (this *MgrCard) SendHandCard(num int) []CardBase {
 
 //获取剩余牌数，超过返回0
 func (this *MgrCard) GetLeftCardCount() int {
-	if this.MSendId > int(len(this.MVSourceCard)) {
+	if this.MSendId > len(this.MVSourceCard) {
 		return 0
 	}
 	return len(this.MVSourceCard) - this.MSendId

@@ -3,6 +3,7 @@ package game
 import (
 	"github.com/lonng/nano/session"
 	log "github.com/sirupsen/logrus"
+	"math/rand"
 )
 
 type Loser struct {
@@ -12,7 +13,7 @@ type Loser struct {
 
 type Player struct {
 	uid        int64  // 用户ID
-	seatPos    int    //座位号（系统从0开始，最多4,  每张桌只能有5个玩家)
+	seatPos    int32  //座位号（系统从0开始，最多4,  每张桌只能有5个玩家)
 	head       string // 头像地址
 	name       string // 玩家名字
 	ip         string // ip地址
@@ -22,6 +23,7 @@ type Player struct {
 	isJoin     bool   //是否进入圈子游戏,主要用于当进入游戏时
 	sitdown    bool   //是否坐下
 	disconnect bool   //是否掉线
+	Coins      int64  //玩家身上携带的金币
 
 	session *session.Session //玩家对应的网络通道
 	desk    *Desk            //玩家的桌子
@@ -33,7 +35,9 @@ type Player struct {
 	settle    bool  //是否结算
 	showed    bool  //是否已show
 	HandCards []GCard
+	CardsSet  [][]int32
 	Timeout   int32 //连续超时次数
+	Point     int32 //点数
 }
 
 func newPlayer(s *session.Session, uid int64, nicename, head, ip string, sex int) *Player {
@@ -52,8 +56,10 @@ func newPlayer(s *session.Session, uid int64, nicename, head, ip string, sex int
 		Timeout:    0,
 		settle:     false,
 		logger:     log.WithField("player", uid),
+		Point:      0,
+		CardsSet:   [][]int32{},
 	}
-
+	p.Coins = rand.Int63()%5000 + 1000
 	//绑定对应的session
 	p.bindSession(s)
 
@@ -68,7 +74,9 @@ func (p *Player) InitPlayer() {
 	p.settle = false
 	p.showed = false
 	p.HandCards = []GCard{}
+	p.CardsSet = [][]int32{}
 	p.Timeout = 0
+	p.Point = 0
 }
 
 func (p *Player) bindSession(s *session.Session) {
@@ -83,7 +91,7 @@ func (p *Player) removeSession() {
 	p.session = nil
 }
 
-func (p *Player) setDesk(d *Desk, turn int) {
+func (p *Player) setDesk(d *Desk, turn int32) {
 
 	if d == nil {
 		p.logger.Error("桌号为空")
@@ -105,7 +113,7 @@ func (p *Player) setIp(ip string) {
 }
 
 //设定座位号
-func (p *Player) SetSeatPos(seatPos int) {
+func (p *Player) SetSeatPos(seatPos int32) {
 
 	p.seatPos = seatPos
 	if seatPos >= 0 {
@@ -116,7 +124,7 @@ func (p *Player) SetSeatPos(seatPos int) {
 }
 
 //读取座位号
-func (p *Player) GetSeatPos() int {
+func (p *Player) GetSeatPos() int32 {
 
 	return p.seatPos
 }
@@ -154,4 +162,21 @@ func (p *Player) DelHandCard(card int32) bool {
 		}
 	}
 	return false
+}
+
+//检测是否是自己的手牌
+func (p *Player) IsMyHandCard(cards []int32) bool {
+	for _, v := range cards {
+		istrue := false
+		for _, v1 := range p.HandCards {
+			if v == v1.Card {
+				istrue = true
+				break
+			}
+		}
+		if !istrue {
+			return false
+		}
+	}
+	return true
 }

@@ -4,6 +4,16 @@ import (
 	"TeenPatti/TRummyGameServer/Poker"
 )
 
+//组牌的类型
+const (
+	Type1stLife     = 6 //第一生命
+	Type2stLife     = 5 //第二生命
+	TypeNeed1stLife = 4 //没有第一生命
+	TypeGroup       = 3 //集
+	TypeNeed2stLife = 2 //没有第二生命
+	TypeOther       = 1 //杂牌类型
+)
+
 type GCard struct {
 	Poker.CardBase
 }
@@ -37,6 +47,9 @@ func (this *GMgrCard) InitCards() {
 }
 
 func (this *GMgrCard) SendCard(num int) (sendCards []GCard) {
+	if this.MSendId+num > len(this.MVCard) {
+		return
+	}
 	c := this.SendHandCard(num)
 	for _, v := range c {
 		sendCards = append(sendCards, GCard{CardBase: v})
@@ -99,7 +112,7 @@ func (this *GMgrCard) Is2stLife(cards2st []GCard, WildCard GCard) bool {
 		WildCard = GCard{Poker.CardBase{Card: Poker.Card_Fang_1}}
 	}
 	tCard := append([]GCard{}, cards2st...)
-	wildCards := []GCard{}
+	var wildCards []GCard
 	for i, v := range tCard {
 		if v.GetCardColor() == Poker.CARD_COLOR_King || v.GetCardValue() == WildCard.GetCardValue() {
 			wildCards = append(wildCards, v)
@@ -166,7 +179,7 @@ func (this *GMgrCard) IsSetLife(cardsSet []GCard, WildCard GCard) bool {
 		WildCard = GCard{Poker.CardBase{Card: Poker.Card_Fang_1}}
 	}
 	tCard := append([]GCard{}, cardsSet...)
-	wildCards := []GCard{}
+	var wildCards []GCard
 	for i, v := range tCard {
 		if v.GetCardColor() == Poker.CARD_COLOR_King || v.GetCardValue() == WildCard.GetCardValue() {
 			wildCards = append(wildCards, v)
@@ -284,4 +297,74 @@ func (this *GMgrCard) QuickSortCLV(cards *[]GCard, begin int, end int) {
 		this.QuickSortCV(cards, begin, i-1)
 		this.QuickSortCV(cards, i+1, end)
 	}
+}
+
+//检测是否胡牌
+func (this *GMgrCard) CheckoutHu(cards [][]GCard, WildCard GCard) (bool, int64) {
+	tCards := append([][]GCard{}, cards...)
+	//检测1st life
+	Is1stlife := false
+	for k, v := range tCards {
+		if this.Is1stLife(v) {
+			tCards = append(tCards[:k], tCards[k+1:]...)
+			Is1stlife = true
+			break
+		}
+	}
+	if !Is1stlife {
+		return false, this.ComputePoint(tCards, WildCard)
+	}
+	//检测2st life
+	Is2stlife := false
+	for k, v := range tCards {
+		if this.Is2stLife(v, WildCard) {
+			tCards = append(tCards[:k], tCards[k+1:]...)
+			Is2stlife = true
+			break
+		}
+	}
+	if !Is2stlife {
+		return false, this.ComputePoint(tCards, WildCard)
+	}
+	//检测其他牌组是否成型
+	var falsecard [][]GCard
+	for _, v := range tCards {
+		if !this.Is2stLife(v, WildCard) && !this.IsSetLife(v, WildCard) {
+			falsecard = append(falsecard, v)
+
+		}
+	}
+	if len(falsecard) > 0 {
+		return false, this.ComputePoint(falsecard, WildCard)
+	}
+	return true, 0
+}
+
+//计算点数
+func (this *GMgrCard) ComputePoint(cards [][]GCard, wildCard GCard) int64 {
+	//挑出万能牌
+	//如果万能牌是王，那么A也是万能牌
+	if wildCard.GetCardColor() == Poker.CARD_COLOR_King {
+		wildCard = GCard{Poker.CardBase{Card: Poker.Card_Fang_1}}
+	}
+	var wildCards []GCard //万能牌
+	var tCard []GCard     //杂牌
+	for _, v := range cards {
+		for _, v1 := range v {
+			if v1.GetCardColor() == Poker.CARD_COLOR_King || v1.GetCardValue() == wildCard.GetCardValue() {
+				wildCards = append(wildCards, v1)
+			} else {
+				tCard = append(tCard, v1)
+			}
+		}
+	}
+	var coins int64
+	for _, v := range tCard {
+		c := int64(v.GetLogicValue())
+		if c > 10 {
+			c = 10
+		}
+		coins += c
+	}
+	return coins
 }

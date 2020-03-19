@@ -34,12 +34,14 @@ const ( //游戏状态
 	GameStateSendCard  = 2
 	GameStatePlay      = 3 //玩家操作阶段
 	GameStateStettle   = 4
+	GameStateEnd       = 5
 )
 const ( //状态时间
 	GameStateWaitStartTime = 7  //游戏开始倒计时
 	GameStateSendCardTime  = 9  //发牌
 	GameStatePlayTime      = 30 //每个玩家操作时间
 	GameStateStettleTime   = 20 //结算时间
+	GameStateEndTime       = 3
 )
 
 type DeskOpts struct {
@@ -62,15 +64,13 @@ type Desk struct {
 	creator   int64  // 创建玩家UID
 	createdAt int64  // 创建时间
 
-	playMutex       sync.RWMutex
-	players         []*Player         //房间内所有玩家
-	seatPlayers     map[int32]*Player //座位上的玩家
-	doingPlayers    map[int32]*Player //正在玩的玩家
-	group           *nano.Group       //房间内组播通道
-	InDeskPlayGroup *nano.Group       //正在玩的玩家广播通道
-	isFirstRound    bool              //是否是本桌的第一局牌
-	totalBet        int64             //总投注
-	logger          *log.Entry
+	playMutex    sync.RWMutex
+	players      []*Player         //房间内所有玩家
+	seatPlayers  map[int32]*Player //座位上的玩家
+	doingPlayers map[int32]*Player //正在玩的玩家
+	group        *nano.Group       //房间内组播通道
+	isFirstRound bool              //是否是本桌的第一局牌
+	logger       *log.Entry
 
 	//游戏部分
 	CardMgr       GMgrCard //卡牌管理器
@@ -78,31 +78,30 @@ type Desk struct {
 	gameStateTime int32    //状态时间
 	TList         []*Timer // 定时器列表
 
-	BankerId    int32   //庄家
-	FristOutId  int32   //首出玩家
-	WildCard    GCard   //万能牌(除大小王外的另一张万能牌)
-	ShowCard    GCard   //show的牌
-	PublicCard  []GCard //公摊牌堆
-	OperateId   int32   //当前正在操作的玩家
-	PointValue  int64   //底注
-	SettleCoins int64   //结算区的金额
-
+	BankerId    int32             //庄家
+	FristOutId  int32             //首出玩家
+	WildCard    GCard             //万能牌(除大小王外的另一张万能牌)
+	ShowCard    GCard             //show的牌
+	ShowPlayer  int32             //show的玩家
+	PublicCard  []GCard           //公摊牌堆
+	OperateId   int32             //当前正在操作的玩家
+	PointValue  int64             //底注
+	SettleCoins int64             //结算区的金额
+	GameRecord  protocol.GEndForm //游戏记录
 }
 
 func NewDesk(roomNo room.Number, opts DeskOpts) *Desk {
 
 	d := &Desk{
-		round:           1,
-		roomNo:          roomNo,
-		deskOpt:         opts,
-		players:         []*Player{},
-		seatPlayers:     map[int32]*Player{},
-		doingPlayers:    map[int32]*Player{},
-		group:           nano.NewGroup(uuid.New()),
-		InDeskPlayGroup: nano.NewGroup(uuid.New()),
-		isFirstRound:    true,
-		totalBet:        0,
-		logger:          log.WithField("deskno", roomNo),
+		round:        0,
+		roomNo:       roomNo,
+		deskOpt:      opts,
+		players:      []*Player{},
+		seatPlayers:  map[int32]*Player{},
+		doingPlayers: map[int32]*Player{},
+		group:        nano.NewGroup(uuid.New()),
+		isFirstRound: true,
+		logger:       log.WithField("deskno", roomNo),
 		//游戏部分
 		gameState:     GameStateWaitJoin,
 		gameStateTime: 0,
@@ -110,21 +109,35 @@ func NewDesk(roomNo room.Number, opts DeskOpts) *Desk {
 		BankerId:      -1,
 		FristOutId:    -1,
 		OperateId:     -1,
+		ShowPlayer:    -1,
 		WildCard:      GCard{},
 		ShowCard:      GCard{},
 		PublicCard:    []GCard{},
-		PointValue:    0,
+		PointValue:    100,
 		SettleCoins:   0,
 	}
 	//获取随机种子
 	rand.Seed(time.Now().UnixNano())
 	d.CardMgr.InitCards()
 	d.CardMgr.Shuffle()
+	d.GameRecord = protocol.GEndForm{}
 	go d.DoTimer()
 
 	logger.Println("new desk:", roomNo.String())
 
 	return d
+}
+func (this *Desk) InitDesk() {
+	this.round = 0
+	this.doingPlayers = map[int32]*Player{}
+	this.CardMgr.Shuffle()
+	this.ClearTimer()
+	this.WildCard = GCard{}
+	this.ShowCard = GCard{}
+	this.PublicCard = []GCard{}
+	this.OperateId = -1
+	this.ShowPlayer = -1
+	this.GameRecord = protocol.GEndForm{}
 }
 
 // 玩家数量
@@ -206,7 +219,7 @@ func (d *Desk) PlayerJoinAfterInfo(p *Player) error {
 	// defer d.playMutex.Unlock()
 	//广播玩家加入信息
 	d.group.Broadcast(NoticePlayerJoin, &protocol.EnterDeskInfo{
-		SeatPos:  p.seatPos,
+		SeatPos:  int(p.seatPos),
 		Nickname: p.name,
 		Sex:      p.sex,
 		HeadUrl:  p.head,
@@ -227,24 +240,31 @@ func (d *Desk) PlayerJoinAfterInfo(p *Player) error {
 		SettleCoins:   d.SettleCoins,
 		GameState:     int32(d.gameState),
 		GameStateTime: int32(d.GetTimerNum(d.gameState)),
+		WildCard:      d.WildCard.Card,
+		ShowCard:      d.ShowCard.Card,
+		CardsNum:      int32(d.CardMgr.GetLeftCardCount()),
 		OperSeatId:    d.OperateId,
 		BankerSeatId:  d.BankerId,
 		FirstSeatId:   d.FristOutId,
-		UserSeatId:    int32(p.seatPos),
+		UserSeatId:    p.seatPos,
 	}
-	for _, p := range d.seatPlayers {
+	for _, v := range d.seatPlayers {
 
 		deskInfo.PlayersInfo = append(deskInfo.PlayersInfo, protocol.EnterDeskInfo{
-			SeatPos:  p.seatPos,
-			Nickname: p.name,
-			Sex:      p.sex,
-			HeadUrl:  p.head,
-			StarNum:  p.starNum,
-			IsBanker: p.isBanker,
-			Sitdown:  p.sitdown,
+			SeatPos:  int(v.seatPos),
+			Nickname: v.name,
+			Sex:      v.sex,
+			HeadUrl:  v.head,
+			StarNum:  v.starNum,
+			IsBanker: v.isBanker,
+			Sitdown:  v.sitdown,
 			Betting:  false,
-			Show:     p.showed,
+			Show:     v.showed,
 		})
+	}
+	//游戏开始，自己不在游戏中
+	if d.gameState > GameStateWaitStart {
+		deskInfo.PublicCard = d.PublicCard[len(d.PublicCard)-1].Card
 	}
 	err := p.session.Response(&protocol.JoinDeskResponse{
 		Success:  true,
@@ -254,6 +274,7 @@ func (d *Desk) PlayerJoinAfterInfo(p *Player) error {
 	if d.gameState != GameStateWaitStart {
 		return err
 	}
+
 	d.ClearTimer()
 	d.AddTimer(GameStateWaitStart, GameStateWaitStartTime, d.start, nil)
 	d.group.Broadcast(NoticeGameState, &protocol.GGameStateNotice{
@@ -276,10 +297,11 @@ func (this *Desk) start(interface{}) {
 		return
 	}
 	//游戏开始
-	this.ClearTimer()
+	this.InitDesk()
 	this.gameState = GameStateSendCard
-	this.doingPlayers = this.seatPlayers
-	this.round = 0
+	for k, v := range this.seatPlayers {
+		this.doingPlayers[k] = v
+	}
 	//初始化玩家
 	for _, v := range this.doingPlayers {
 		v.InitPlayer()
@@ -334,14 +356,26 @@ func (this *Desk) start(interface{}) {
 		})
 	}
 
-	this.AddTimer(GameStateSendCard, GameStateSendCardTime, this.SendCardOutTime, nil)
+	this.AddTimer(GameStateSendCard, GameStateSendCardTime, this.OpertionNotice, nil)
 
 }
 
 //玩家操作通知
-func (this *Desk) SendCardOutTime(interface{}) {
+func (this *Desk) OpertionNotice(interface{}) {
 	if this.OperateId == this.FristOutId {
 		this.round++
+	}
+	if this.CardMgr.GetLeftCardCount() <= 0 {
+		//广播游戏结束
+		this.gameState = GameStateEnd
+		this.group.Broadcast(NoticeEndInfo, &protocol.GEndForm{})
+		this.AddTimer(GameStateEnd, GameStateEndTime, this.GameEnd, nil)
+		this.group.Broadcast(NoticeGameState, &protocol.GGameStateNotice{
+			GameState: int32(this.gameState),
+			Time:      int32(this.GetTimerNum(this.gameState)),
+		})
+
+		return
 	}
 	this.gameState = GameStatePlay
 	this.AddTimer(GameStatePlay, GameStatePlayTime, this.PlayeroperOutTime, nil)
@@ -358,53 +392,34 @@ func (this *Desk) PlayeroperOutTime(interface{}) {
 	fmt.Println("正在玩所有玩家", this.doingPlayers, "操作的玩家：", this.OperateId)
 	p := this.doingPlayers[this.OperateId]
 	handcard := p.HandCards
-	notice := protocol.GPlayEndNotice{}
 	if len(handcard) < 13 || len(handcard) > 14 {
 		this.logger.Error("座位号:%d  手牌数不对，手牌是%v", this.OperateId, handcard)
 		return
 	}
-	if p.Timeout >= 2 { //玩家超时弃牌
-		this.GiveUp(p)
+	if p.Timeout >= 2 || this.ShowPlayer != -1 { //玩家超时弃牌
+		_ = this.GiveUp(p, true)
+		this.ShowPlayer = -1
 		return
 	}
 	if len(handcard) == 13 {
 		//摸牌操作
-		//this.OperCard(p, &protocol.GOperCardRequest{Opertion: 2})
-		operCard := this.CardMgr.SendCard(1)[0]
-		notice.Opertions = append(notice.Opertions, 2)
-		notice.OperCard = append(notice.OperCard, operCard.Card)
-		notice.PublicCard = append(notice.PublicCard, this.PublicCard[len(this.PublicCard)-1].Card)
-		p.HandCards = append(p.HandCards, operCard)
+		this.OperCard(p, &protocol.GOperCardRequest{Opertion: 2}, true)
+		this.AddTimer(GameStatePlay, 3, this.PlayeroperOutTime, nil)
 	}
 	//出牌操作
-	//this.OperCard(p, &protocol.GOperCardRequest{
-	//	Opertion: 3,
-	//	OperCard: p.HandCards[len(p.HandCards)-1].Card,
-	//})
-	Card := p.HandCards[len(p.HandCards)-1].Card
-	p.DelHandCard(Card)
-	this.PublicCard = append(this.PublicCard, GCard{Poker.CardBase{Card: Card}})
-	notice.Opertions = append(notice.Opertions, 3)
-	notice.OperCard = append(notice.OperCard, Card)
-	notice.PublicCard = append(notice.PublicCard, this.PublicCard[len(this.PublicCard)-1].Card)
-	p.session.Push(NoticePlayEnd, &notice)
-
-	p.Timeout++
-	p.deposit = true
-
-	//轮到下一位玩家
-	for i := 1; i < DeskFullplayerNum; i++ {
-		nextplayer := (this.OperateId + int32(i)) % DeskFullplayerNum
-		if this.doingPlayers[nextplayer] != nil {
-			this.OperateId = nextplayer
-			break
-		}
+	if len(handcard) == 14 {
+		this.OperCard(p, &protocol.GOperCardRequest{
+			Opertion: 3,
+			OperCard: p.HandCards[len(p.HandCards)-1].Card,
+		}, true)
+		p.Timeout++
+		p.deposit = true
 	}
-	this.SendCardOutTime(nil)
+
 }
 
 //操作牌
-func (this *Desk) OperCard(p *Player, msg *protocol.GOperCardRequest) (err error) {
+func (this *Desk) OperCard(p *Player, msg *protocol.GOperCardRequest, IsOuttime bool) (err error) {
 	//游戏状态监测
 	if this.gameState != GameStatePlay {
 		return p.session.Response(&protocol.GOperCardResponse{
@@ -420,7 +435,7 @@ func (this *Desk) OperCard(p *Player, msg *protocol.GOperCardRequest) (err error
 		})
 	}
 	//检测玩家是否show
-	if this.ShowCard.Card != 0 {
+	if this.ShowPlayer != -1 {
 		return p.session.Response(&protocol.GOperCardResponse{
 			Opertion: 0,
 			Error:    "玩家show时间，不允许操作牌！",
@@ -434,6 +449,13 @@ func (this *Desk) OperCard(p *Player, msg *protocol.GOperCardRequest) (err error
 			Error:    "玩家手牌数不对！",
 		})
 	}
+	//没牌可摸了
+	if this.CardMgr.GetLeftCardCount() <= 0 && msg.Opertion == 2 && len(p.HandCards) == 13 {
+		return p.session.Response(&protocol.GOperCardResponse{
+			Opertion: 0,
+			Error:    "操作错误！",
+		})
+	}
 	fmt.Println("玩家：,操作：,手牌: ", p.name, msg.Opertion, msg.OperCard)
 	//判断玩家的操作
 	msgResponse := protocol.GOperCardResponse{
@@ -441,7 +463,7 @@ func (this *Desk) OperCard(p *Player, msg *protocol.GOperCardRequest) (err error
 		Error:    "玩家操作错误！",
 	}
 	msgNotice := protocol.GPlayerOperNotice{
-		SeatId:   int32(p.seatPos),
+		SeatId:   p.seatPos,
 		Opertion: msg.Opertion,
 	}
 	//摸牌公摊牌
@@ -461,9 +483,9 @@ func (this *Desk) OperCard(p *Player, msg *protocol.GOperCardRequest) (err error
 	}
 	//摸牌堆的牌
 	if msg.Opertion == 2 && len(p.HandCards) == 13 {
-		operCard := this.CardMgr.SendCard(1)[0]
-		p.HandCards = append(p.HandCards, operCard)
-		msgResponse.OperCard = operCard.Card
+		operCard := this.CardMgr.SendCard(1)
+		p.HandCards = append(p.HandCards, operCard[0])
+		msgResponse.OperCard = operCard[0].Card
 		msgResponse.PublicCard = this.PublicCard[len(this.PublicCard)-1].Card
 		msgResponse.Error = ""
 		msgNotice.OperCard = 0
@@ -487,22 +509,33 @@ func (this *Desk) OperCard(p *Player, msg *protocol.GOperCardRequest) (err error
 	}
 	//show（胡了）
 	if msg.Opertion == 4 && len(p.HandCards) == 14 {
-		this.DelTimer(GameStatePlay)
 		msgResponse.OperCard = msg.OperCard
 		msgResponse.PublicCard = this.PublicCard[len(this.PublicCard)-1].Card
 		msgResponse.Error = ""
 		msgNotice.OperCard = msg.OperCard
 		msgNotice.PublicCard = this.PublicCard[len(this.PublicCard)-1].Card
 		this.ShowCard = GCard{Poker.CardBase{Card: msg.OperCard}}
+		this.ShowPlayer = p.seatPos
 	}
+	msgResponse.CardsNum = int32(this.CardMgr.GetLeftCardCount())
+	msgNotice.CardsNum = int32(this.CardMgr.GetLeftCardCount())
 	if msgResponse.Error != "" {
 		msgResponse.Opertion = 0
 	} else {
 		p.Timeout = 0
 	}
-	err = p.session.Response(&msgResponse)
+	if IsOuttime {
+		err = p.session.Push(NoticeOperOutTime, &msgResponse)
+	} else {
+		err = p.session.Response(&msgResponse)
+	}
 	if msgResponse.Error == "" {
-		this.group.Broadcast(NoticeGameOperCard, &msgNotice)
+		_ = this.group.Multicast(NoticeGameOperCard, &msgNotice, func(s *session.Session) bool {
+			if s == p.session {
+				return false
+			}
+			return true
+		})
 	}
 	//如果是出牌，切换下一位玩家
 	if msgResponse.Opertion == 3 {
@@ -514,106 +547,271 @@ func (this *Desk) OperCard(p *Player, msg *protocol.GOperCardRequest) (err error
 				break
 			}
 		}
-		this.SendCardOutTime(nil)
+		this.AddTimer(GameStatePlay, 2, this.OpertionNotice, nil)
 	}
 	return
 }
 
-//玩家show操作
-func (this *Desk) ShowCards(p *Player, msg *protocol.GShowCardsRequest) error {
-	//检测是否轮到这位玩家
-	if int32(p.seatPos) != this.OperateId || this.ShowCard.Card == 0 {
-		return p.session.Response(&protocol.GShowCardsResponse{
-			IsWin: false,
-			Error: "玩家没有Show Card！",
+//玩家整理牌
+func (this *Desk) ShowCards(p *Player, msg *protocol.GSetHandCardRequest) error {
+	//检验游戏状态
+	if this.gameState < GameStatePlay {
+		return p.session.Response(&protocol.GSetHandCardResponse{
+			Success: false,
+			Error:   "还没开始游戏！",
 		})
 	}
 	//检测玩家组合的牌组中是否超过5组
-	if len(msg.ShowCards) >= 5 {
-		return p.session.Response(&protocol.GShowCardsResponse{
-			IsWin: false,
-			Error: "玩家的牌组不小于5组",
+	if len(msg.CardsSets) > 5 {
+		return p.session.Response(&protocol.GSetHandCardResponse{
+			Success: false,
+			Error:   "玩家的牌组不小于5组",
 		})
 	}
-	//取出牌组
-	var showCards [][]GCard
-	var tcards []GCard
-	for _, v := range msg.ShowCards {
-		var show []GCard
-		for _, v1 := range v {
-			show = append(show, GCard{Poker.CardBase{Card: v1}})
-		}
-		showCards = append(showCards, show)
-		tcards = append(tcards, show...)
-	}
-	//检测是否是13张
-	if len(msg.ShowCards) != 13 {
-		return p.session.Response(&protocol.GShowCardsResponse{
-			IsWin: false,
-			Error: "玩家Show Cards的牌数不对！",
-		})
-	}
-	//检验玩家Show的牌是否都是玩家的手牌
-	this.CardMgr.QuickSortCLV(&tcards, 0, len(tcards)-1)
-	this.CardMgr.QuickSortCLV(&p.HandCards, 0, len(msg.ShowCards)-1)
-	for k, v := range p.HandCards {
-		if v != tcards[k] {
-			return p.session.Response(&protocol.GShowCardsResponse{
-				IsWin: false,
-				Error: "玩家Show Cards跟玩家手牌不匹配！",
+	//检测是否是自己的手牌
+	for _, v := range msg.CardsSets {
+		if !p.IsMyHandCard(v.Cards) {
+			return p.session.Response(&protocol.GSetHandCardResponse{
+				Success: false,
+				Error:   "组牌错误！",
 			})
 		}
 	}
-	//检测1st life
-	Is1stlife := false
-	for k, v := range showCards {
-		if this.CardMgr.Is1stLife(v) {
-			showCards = append(showCards[:k], showCards[k+1:]...)
-			Is1stlife = true
-			break
-		}
+	//处理发过来的牌组类型
+	msgResponse := protocol.GSetHandCardResponse{}
+	var tset []protocol.CardsSet
+	tset, msgResponse.TotalPoint = this.HandleCardsSet(msg.CardsSets)
+	p.CardsSet = this.CardsSetToInt32(tset)
+	msgResponse.CardsSets = tset
+	msgResponse.Success = true
+	err := p.session.Response(&msgResponse)
+	//判断是否胡牌
+	if !msg.IsFinish {
+		return err
 	}
-	if !Is1stlife {
-		return p.session.Response(&protocol.GShowCardsResponse{
-			IsWin: false,
-			Error: "玩家没有胡牌！",
-		})
+	if msgResponse.TotalPoint != 0 {
+		_ = this.GiveUp(p, true)
+		return err
 	}
-	//检测2st life
-	Is2stlife := false
-	for k, v := range showCards {
-		if this.CardMgr.Is2stLife(v, this.WildCard) {
-			showCards = append(showCards[:k], showCards[k+1:]...)
-			Is2stlife = true
-			break
-		}
-	}
-	if !Is2stlife {
-		return p.session.Response(&protocol.GShowCardsResponse{
-			IsWin: false,
-			Error: "玩家没有胡牌！",
-		})
-	}
-	//检测其他牌组是否成型
-	for _, v := range showCards {
-		if !this.CardMgr.Is2stLife(v, this.WildCard) && !this.CardMgr.IsSetLife(v, this.WildCard) {
-			return p.session.Response(&protocol.GShowCardsResponse{
-				IsWin: false,
-				Error: "玩家没有胡牌！",
-			})
-		}
-	}
-	//应答成功
-	err := p.session.Response(&protocol.GShowCardsResponse{
-		IsWin: true,
-	})
 	//广播
 	this.group.Broadcast(NoticeGameWin, &protocol.GPlayerWinNotice{
-		SeatId: int32(p.seatPos),
+		SeatId: p.seatPos,
 	})
 	//添加结算时间
 	this.AddTimer(GameStateStettle, GameStateStettleTime-1, this.SettleTimeOut, nil)
 	this.gameState = GameStateStettle
+	this.group.Broadcast(NoticeGameState, &protocol.GGameStateNotice{
+		GameState: int32(this.gameState),
+		Time:      int32(this.GetTimerNum(this.gameState)),
+	})
+	return err
+}
+
+//结算超时
+func (this *Desk) SettleTimeOut(interface{}) {
+	//检测玩家是否都结算了
+	for _, v := range this.doingPlayers {
+		if v.seatPos == this.OperateId || v.settle {
+			continue
+		}
+		_ = this.Settle(v, &protocol.GSettleRequect{
+			Cards: v.CardsSet,
+		}, true)
+	}
+}
+
+//结算
+func (this *Desk) Settle(p *Player, msg *protocol.GSettleRequect, IsOutTime bool) (err error) {
+	//检测
+	if p == nil {
+		this.logger.Debug("Desk.Settle: *Player is nil!")
+		return
+	}
+	if this.gameState != GameStateStettle {
+		err = p.session.Response(&protocol.GSettleResponse{
+			WinCoins: 0,
+			Error:    "状态错误！",
+		})
+		return
+	}
+	//如果是赢的玩家就不用结算
+	if this.OperateId == p.seatPos {
+		err = p.session.Response(&protocol.GSettleResponse{
+			WinCoins: 0,
+			Error:    "消息错误！",
+		})
+		return
+	}
+	if p.settle {
+		err = p.session.Response(&protocol.GSettleResponse{
+			WinCoins: 0,
+			Error:    "不能重复结算！",
+		})
+		return
+	}
+
+	//取出牌组
+	var tcards [][]GCard
+	var show []GCard
+	for _, v := range msg.Cards {
+		for _, v1 := range v {
+			show = append(show, GCard{Poker.CardBase{Card: v1}})
+		}
+		tcards = append(tcards, show)
+	}
+	//检验发过来的牌组是否都是玩家的手牌
+	this.CardMgr.QuickSortCLV(&show, 0, len(show)-1)
+	this.CardMgr.QuickSortCLV(&p.HandCards, 0, len(p.HandCards)-1)
+	for k, v := range p.HandCards {
+		if v != show[k] {
+			err = p.session.Response(&protocol.GSettleResponse{
+				WinCoins: 0,
+				Error:    "发过来的牌组错误！",
+			})
+			return
+		}
+	}
+	//下一位玩家
+	nextplayerId := int32(0)
+	for i := 1; i < DeskFullplayerNum; i++ {
+		nextplayerId = (this.OperateId + int32(i)) % DeskFullplayerNum
+		if this.doingPlayers[nextplayerId] != nil {
+			break
+		}
+	}
+	if this.round <= 1 && (this.OperateId == this.FristOutId || this.OperateId == nextplayerId) { //天胡或者地胡
+		p.Point = 80
+		p.win = -1 * 80 * this.PointValue
+	} else {
+		_, v := this.CardMgr.CheckoutHu(tcards, this.WildCard)
+		p.Point = int32(v)
+		p.win = -1 * v * this.PointValue
+	}
+	p.Coins += p.win
+	this.SettleCoins -= p.win
+	p.settle = true
+	//添加记录
+	this.GameRecord.EndInfo = append(this.GameRecord.EndInfo, protocol.PlayerEndInfo{
+		Name:      p.name,
+		Head:      p.head,
+		CardsSets: p.CardsSet,
+		Point:     p.Point,
+		Coins:     p.win,
+	})
+	//结算通知
+	if IsOutTime {
+		p.session.Push("", &protocol.GSettleResponse{
+			WinCoins: p.win,
+		})
+	} else {
+		err = p.session.Response(&protocol.GSettleResponse{
+			WinCoins: p.win,
+		})
+	}
+
+	//判断是否都结算完了
+	for _, v := range this.doingPlayers {
+		if v.seatPos == this.OperateId || v.settle {
+			continue
+		}
+		return
+	}
+	winPlayer := this.doingPlayers[this.OperateId]
+	winPlayer.win = this.SettleCoins
+	winPlayer.Coins += this.SettleCoins
+	//广播游戏结束
+	//添加赢家的记录
+	this.GameRecord.EndInfo = append([]protocol.PlayerEndInfo{{
+		Name:      winPlayer.name,
+		Head:      winPlayer.head,
+		CardsSets: winPlayer.CardsSet,
+		Point:     0,
+		Coins:     winPlayer.win,
+	}}, this.GameRecord.EndInfo...)
+	this.group.Broadcast(NoticeEndInfo, &this.GameRecord)
+	this.gameState = GameStateEnd
+	this.AddTimer(GameStateEnd, GameStateEndTime, this.GameEnd, nil)
+	this.group.Broadcast(NoticeGameState, &protocol.GGameStateNotice{
+		GameState: int32(this.gameState),
+		Time:      int32(this.GetTimerNum(this.gameState)),
+	})
+	return
+}
+
+//放弃
+func (this *Desk) GiveUp(p *Player, IsOutTime bool) error {
+	//扣钱
+	if IsOutTime && this.ShowPlayer != -1 {
+		p.Point = DeskMaxLosePoint
+	} else if this.round <= 1 {
+		p.Point = Desk1RoundLosePoint
+	} else if this.round == 2 {
+		p.Point = Desk2RoundLosePoint
+	} else {
+		p.Point = DeskMaxLosePoint
+	}
+	coins := int64(p.Point) * this.PointValue
+	this.SettleCoins += coins
+	p.Coins -= coins
+	//添加记录
+	this.GameRecord.EndInfo = append(this.GameRecord.EndInfo, protocol.PlayerEndInfo{
+		Name:      p.name,
+		Head:      p.head,
+		CardsSets: p.CardsSet,
+		Point:     p.Point,
+		Coins:     p.win,
+	})
+	//如果是轮到自己操作的时候放弃，那么切换下一个玩家
+	if this.OperateId == p.seatPos {
+		//轮到下一位玩家
+		for i := 1; i < DeskFullplayerNum; i++ {
+			nextplayer := (this.OperateId + int32(i)) % DeskFullplayerNum
+			if this.doingPlayers[nextplayer] != nil {
+				this.OperateId = nextplayer
+				break
+			}
+		}
+	}
+	//
+	delete(this.doingPlayers, p.seatPos)
+	delete(this.seatPlayers, p.seatPos)
+	msgNotice := protocol.GGiveUpNotice{}
+	msgNotice.IsShow = IsOutTime
+	msgNotice.LosingCoins = coins
+	msgNotice.PlayerCoins = p.Coins
+	msgNotice.SeatId = p.seatPos
+	var err error
+	if IsOutTime {
+		p.session.Push(NoticeLoseGame, &protocol.GGiveUpResponse{
+			Success: true,
+			Coins:   coins,
+		})
+	} else {
+		err = p.session.Response(&protocol.GGiveUpResponse{
+			Success: true,
+			Coins:   coins,
+		})
+	}
+
+	_ = this.group.Multicast(NoticeGiveUp, &msgNotice, func(s *session.Session) bool {
+		if s == p.session && !IsOutTime {
+			return false
+		}
+		return true
+	})
+	//如果只剩一家就结算
+	if len(this.doingPlayers) == 1 {
+		//广播
+		this.group.Broadcast(NoticeGameWin, &protocol.GPlayerWinNotice{
+			SeatId: this.doingPlayers[0].seatPos,
+		})
+		this.gameState = GameStateEnd
+		this.AddTimer(GameStateEnd, GameStateEndTime, this.GameEnd, nil)
+		this.group.Broadcast(NoticeGameState, &protocol.GGameStateNotice{
+			GameState: int32(this.gameState),
+			Time:      int32(this.GetTimerNum(this.gameState)),
+		})
+	}
 	return err
 }
 
@@ -728,14 +926,14 @@ func (this *Desk) AddPlayerToDesk(p *Player) bool {
 	for i := int32(0); i < DeskFullplayerNum; i++ {
 		if this.seatPlayers[i] == nil {
 			this.seatPlayers[i] = p
-			p.SetSeatPos(int(i))
+			p.SetSeatPos(i)
 			break
 		}
 		//不在座位上设为-1
 		p.SetSeatPos(-1)
 	}
 	for i, p := range this.players {
-		p.setDesk(this, i)
+		p.setDesk(this, int32(i))
 	}
 	//如果玩家玩家人数够了
 	if len(this.seatPlayers) >= 2 && this.gameState == GameStateWaitJoin {
@@ -744,57 +942,109 @@ func (this *Desk) AddPlayerToDesk(p *Player) bool {
 	return true
 }
 
-//结算超时
-func (this *Desk) SettleTimeOut(interface{}) {
-	//检测玩家是否都结算了
-	for _, v := range this.doingPlayers {
-		if int32(v.seatPos) == this.OperateId {
+//游戏结束
+func (this *Desk) GameEnd(interface{}) {
+
+	//判断是否人数足够重开一把
+	if len(this.seatPlayers) < DeskMinplayerNum {
+		this.gameState = GameStateWaitJoin
+		return
+	}
+	//游戏重开一局
+	this.gameState = GameStateWaitStart
+	this.AddTimer(GameStateWaitStart, GameStateWaitStartTime, this.start, nil)
+	this.group.Broadcast(NoticeGameState, &protocol.GGameStateNotice{
+		GameState: int32(this.gameState),
+		Time:      int32(this.GetTimerNum(this.gameState)),
+	})
+}
+
+func (this *Desk) Int32ToGCard(str []int32) []GCard {
+	var tset []GCard
+	for _, v := range str {
+		tset = append(tset, GCard{Poker.CardBase{Card: v}})
+	}
+	return tset
+}
+
+func (this *Desk) GCardToInt32(str []GCard) []int32 {
+	var tset []int32
+	for _, v := range str {
+		tset = append(tset, v.Card)
+	}
+	return tset
+}
+
+func (this *Desk) CardsSetToInt32(cardsSet []protocol.CardsSet) [][]int32 {
+	var str [][]int32
+	for _, v := range cardsSet {
+		str = append(str, v.Cards)
+	}
+	return str
+}
+
+//整理牌组的类型
+func (this *Desk) HandleCardsSet(CardsSets []protocol.CardsSet) ([]protocol.CardsSet, int32) {
+	//计算这些牌的组合情况
+	totalPoint := int32(0)
+	sets := CardsSets
+	have1st := -1
+	have2st := -1
+	var firstK []int
+	var secondK []int
+	var GroupK []int
+	//找出第一生命和第二生命
+	for k, v := range CardsSets {
+		if this.CardMgr.Is1stLife(this.Int32ToGCard(v.Cards)) {
+			sets[k].Type = Type1stLife
+			firstK = append(firstK, k)
+		} else if this.CardMgr.Is2stLife(this.Int32ToGCard(v.Cards), this.WildCard) {
+			sets[k].Type = Type2stLife
+			secondK = append(secondK, k)
+		} else if this.CardMgr.IsSetLife(this.Int32ToGCard(v.Cards), this.WildCard) {
+			sets[k].Type = TypeGroup
+			GroupK = append(GroupK, k)
+		} else {
+			sets[k].Type = TypeOther
+			sets[k].Point = int32(this.CardMgr.ComputePoint([][]GCard{this.Int32ToGCard(v.Cards)}, this.WildCard))
+			totalPoint += sets[k].Point
+		}
+		if v.Type == Type1stLife && sets[k].Type >= Type1stLife {
+			have1st = k
+		}
+		if v.Type == Type2stLife && sets[k].Type >= Type2stLife {
+			have2st = k
+		}
+	}
+	//确定唯一第一生命
+	for _, v := range firstK {
+		if have1st == -1 {
+			have1st = v
 			continue
 		}
-		this.GiveUp(v)
+		sets[v].Type = Type2stLife
+		secondK = append(secondK, v)
 	}
-}
-
-//结算
-func (this *Desk) Settle(p *Player) bool {
-	if p == nil {
-		this.logger.Debug("Desk.Settle: *Player is nil!")
-		return false
-	}
-	if this.gameState != GameStateStettle {
-
-	}
-	return true
-}
-
-func (this *Desk) GiveUp(p *Player) bool {
-	p.sitdown = false
-	//还没扣钱
-	if this.round <= 1 {
-		this.totalBet += Desk1RoundLosePoint * this.PointValue
-	} else if this.round == 2 {
-		this.totalBet += Desk2RoundLosePoint * this.PointValue
-	} else {
-		this.totalBet += DeskMaxLosePoint * this.PointValue
-	}
-	//如果是轮到自己操作的时候放弃，那么切换下一个玩家
-	if this.OperateId == int32(p.seatPos) {
-		//轮到下一位玩家
-		for i := 1; i < DeskFullplayerNum; i++ {
-			nextplayer := (this.OperateId + int32(i)) % DeskFullplayerNum
-			if this.doingPlayers[nextplayer] != nil {
-				this.OperateId = nextplayer
-				break
-			}
+	//确定唯一第二生命
+	for _, v := range secondK {
+		if have1st == -1 {
+			sets[v].Type = TypeNeed1stLife
+			continue
 		}
+		if have2st == -1 {
+			have2st = v
+			continue
+		}
+		sets[v].Type = TypeGroup
+		GroupK = append(GroupK, v)
 	}
-	//
-	delete(this.doingPlayers, int32(p.seatPos))
-	delete(this.seatPlayers, int32(p.seatPos))
-	//广播
-	//如果只剩一家就结算
-	if len(this.doingPlayers) == 1 {
-		this.Settle(this.doingPlayers[0])
+	//找出组
+	for _, v := range GroupK {
+		if have2st == -1 {
+			sets[v].Type = TypeNeed2stLife
+			continue
+		}
+		sets[v].Type = TypeGroup
 	}
-	return true
+	return sets, totalPoint
 }
