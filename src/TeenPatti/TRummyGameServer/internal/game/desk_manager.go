@@ -2,43 +2,29 @@ package game
 
 import (
 	"fmt"
-	// "fmt"
 	"time"
 
 	"github.com/lonng/nano/component"
 	"github.com/lonng/nano/scheduler"
 	"github.com/lonng/nano/session"
 
-	"TeenPatti/TRummyGameServer/pkg/errutil"
 	"TeenPatti/TRummyGameServer/pkg/room"
 	"TeenPatti/TRummyGameServer/protocol"
 )
 
 const (
-	Offline = "离线"
-	Waiting = "等待中"
-
-	fieldDesk   = "desk"
-	fieldPlayer = "player"
+	fieldDesk = "desk"
 )
-
-const deskOpBacklog = 64
 
 const (
 	errorCode = -1 //错误码
 )
 
 const (
-	deskNotFoundMessage        = "您输入的房间号不存在, 请确认后再次输入"
-	deskPlayerNumEnoughMessage = "您加入的房间已经满人, 请确认房间号后再次确认"
-	autherNotAvailMessage      = "无效的帐号认帐，请重新认证"
-	versionExpireMessage       = "你当前的游戏版本过老，请更新客户端，地址: http://fir.im/tand"
+	autherNotAvailMessage = "无效的帐号认帐，请重新认证"
 )
 
 var (
-	deskNotFoundResponse = &protocol.JoinDeskResponse{Code: errutil.YXDeskNotFound, Error: deskNotFoundMessage}
-	deskPlayerNumEnough  = &protocol.JoinDeskResponse{Code: errorCode, Error: deskPlayerNumEnoughMessage}
-	joinVersionExpire    = &protocol.JoinDeskResponse{Code: errorCode, Error: versionExpireMessage}
 	deskNotAutherSession = &protocol.JoinDeskResponse{Code: errorCode, Error: autherNotAvailMessage}
 )
 
@@ -256,11 +242,11 @@ func (this *TRDeskManager) JoinDesk(s *session.Session, data *protocol.JoinDeskR
 
 }
 
-//退出桌子
-func (this *TRDeskManager) ExitDesk(s *session.Session, msg *protocol.ExitRequest) error {
-
-	return nil
-}
+////退出桌子
+//func (this *TRDeskManager) ExitDesk(s *session.Session, msg *protocol.ExitRequest) error {
+//
+//	return nil
+//}
 
 //按下了坐下
 func (this *TRDeskManager) SitdownPush(s *session.Session) error {
@@ -357,5 +343,26 @@ func (this *TRDeskManager) GiveUp(s *session.Session, msg *protocol.GGiveUpReque
 			Success: false,
 		})
 	}
-	return p.desk.GiveUp(p, false)
+	fmt.Println("玩家请求弃牌！")
+	return p.desk.GiveUp(p, false, msg)
+}
+
+//请求出牌记录
+func (this *TRDeskManager) OutCardRecord(s *session.Session, msg *protocol.GOutCardRecordRequect) error {
+	//检测消息
+	p, err := this.checkSessionAuther(s)
+	if err != nil {
+		logger.Warnf("ShowCard Error:", s.UID())
+		return s.Response(&protocol.GOutCardRecordResponse{
+			Success: false,
+		})
+	}
+	//检测玩家是否在桌子中
+	if p.desk == nil {
+		logger.Debug("ShowCard Error:", s.UID())
+		return s.Response(&protocol.GOutCardRecordResponse{
+			Success: false,
+		})
+	}
+	return p.desk.OutCardRecord(p)
 }

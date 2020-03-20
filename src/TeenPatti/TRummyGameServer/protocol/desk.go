@@ -146,6 +146,7 @@ type GSetHandCardResponse struct {
 	Success    bool //是否成功
 	CardsSets  []CardsSet
 	TotalPoint int32
+	IsHu       bool   //是否胡牌
 	Error      string //报错信息
 }
 
@@ -161,9 +162,21 @@ type GSettleResponse struct {
 
 //放弃
 type GGiveUpRequect struct {
+	Cards [][]int32
 }
 
 type GGiveUpResponse struct {
-	Success bool //是否成功
-	Coins   int64
+	Success     bool //是否成功
+	Coins       int64
+	TotalCoins  int64 //桌子上的钱
+	PlayerCoins int64
+}
+
+//请求出牌记录
+type GOutCardRecordRequect struct {
+}
+
+type GOutCardRecordResponse struct {
+	Success    bool      //是否成功
+	CardRecord [][]int32 //出牌记录
 }

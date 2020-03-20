@@ -70,7 +70,7 @@ func (this *GMgrCard) Is1stLife(cards1st []GCard) bool {
 		}
 	}
 	//按A最大2最小排序
-	this.QuickSortLV(&cards1st, 0, len(cards1st)-1)
+	this.QuickSortLV(cards1st)
 	//检测同花顺子
 	isTrue := true
 	for k, v := range cards1st {
@@ -86,7 +86,7 @@ func (this *GMgrCard) Is1stLife(cards1st []GCard) bool {
 		return isTrue
 	}
 	//按A最小K最大排序
-	this.QuickSortCV(&cards1st, 0, len(cards1st)-1)
+	this.QuickSortCV(cards1st)
 	for k, v := range cards1st {
 		if k == 0 {
 			continue
@@ -132,7 +132,7 @@ func (this *GMgrCard) Is2stLife(cards2st []GCard, WildCard GCard) bool {
 	//检测同花顺
 	wildNum := int32(len(wildCards))
 	//按A最大2最小排序
-	this.QuickSortLV(&cards2st, 0, len(cards2st)-1)
+	this.QuickSortLV(cards2st)
 	isTrue := true
 	for k, v := range cards2st {
 		if k == 0 {
@@ -150,7 +150,7 @@ func (this *GMgrCard) Is2stLife(cards2st []GCard, WildCard GCard) bool {
 	}
 	//按A最小K最大排序
 	wildNum = int32(len(wildCards))
-	this.QuickSortCV(&cards2st, 0, len(cards2st)-1)
+	this.QuickSortCV(cards2st)
 	for k, v := range cards2st {
 		if k == 0 {
 			continue
@@ -191,7 +191,7 @@ func (this *GMgrCard) IsSetLife(cardsSet []GCard, WildCard GCard) bool {
 		return true
 	}
 	//检测set
-	this.QuickSortCLV(&cardsSet, 0, len(cardsSet)-1)
+	this.QuickSortCLV(cardsSet)
 	for k, v := range cardsSet {
 		if k == 0 {
 			continue
@@ -205,98 +205,72 @@ func (this *GMgrCard) IsSetLife(cardsSet []GCard, WildCard GCard) bool {
 }
 
 //快速排序（根据逻辑值从大到小）A最大2最小
-func (this *GMgrCard) QuickSortLV(cards *[]GCard, begin int, end int) {
-	if len(*cards) <= 1 {
+func (this *GMgrCard) QuickSortLV(values []GCard) {
+	if len(values) <= 1 {
 		return
 	}
-	if begin < 0 {
-		begin = 0
-	}
-	if end >= len(*cards) {
-		end = len(*cards) - 1
-	}
-	if begin < end {
-		temp := (*cards)[begin]
-		i := begin
-		j := end
-		for i < j {
-			for i < j && (*cards)[j].GetLogicValue() < temp.GetLogicValue() {
-				j--
-			}
-			(*cards)[i] = (*cards)[j]
-			for i < j && (*cards)[i].GetLogicValue() >= temp.GetLogicValue() {
-				i++
-			}
-			(*cards)[j] = (*cards)[i]
+	mid, i := values[0], 1
+	head, tail := 0, len(values)-1
+	for head < tail {
+		if values[i].GetLogicValue() < mid.GetLogicValue() ||
+			(values[i].GetCardColor() < mid.GetCardColor() && values[i].GetLogicValue() == mid.GetLogicValue()) {
+			values[i], values[tail] = values[tail], values[i]
+			tail--
+		} else {
+			values[i], values[head] = values[head], values[i]
+			head++
+			i++
 		}
-		(*cards)[i] = temp
-		this.QuickSortLV(cards, begin, i-1)
-		this.QuickSortLV(cards, i+1, end)
 	}
+	values[head] = mid
+	this.QuickSortLV(values[:head])
+	this.QuickSortLV(values[head+1:])
 }
 
 //快速排序（根据牌值从大到小）A最小K最大
-func (this *GMgrCard) QuickSortCV(cards *[]GCard, begin int, end int) {
-	if len(*cards) <= 1 {
+func (this *GMgrCard) QuickSortCV(values []GCard) {
+	if len(values) <= 1 {
 		return
 	}
-	if begin < 0 {
-		begin = 0
-	}
-	if end >= len(*cards) {
-		end = len(*cards) - 1
-	}
-	if begin < end {
-		temp := (*cards)[begin]
-		i := begin
-		j := end
-		for i < j {
-			for i < j && (*cards)[j].GetCardValue() < temp.GetCardValue() {
-				j--
-			}
-			(*cards)[i] = (*cards)[j]
-			for i < j && (*cards)[i].GetCardValue() >= temp.GetCardValue() {
-				i++
-			}
-			(*cards)[j] = (*cards)[i]
+	mid, i := values[0], 1
+	head, tail := 0, len(values)-1
+	for head < tail {
+		if values[i].GetCardValue() < mid.GetCardValue() ||
+			(values[i].GetCardColor() < mid.GetCardColor() && values[i].GetCardValue() == mid.GetCardValue()) {
+			values[i], values[tail] = values[tail], values[i]
+			tail--
+		} else {
+			values[i], values[head] = values[head], values[i]
+			head++
+			i++
 		}
-		(*cards)[i] = temp
-		this.QuickSortCV(cards, begin, i-1)
-		this.QuickSortCV(cards, i+1, end)
 	}
+	values[head] = mid
+	this.QuickSortCV(values[:head])
+	this.QuickSortCV(values[head+1:])
 }
 
 //快速排序 （根据花色排序）黑桃A最大 方块2最小
-func (this *GMgrCard) QuickSortCLV(cards *[]GCard, begin int, end int) {
-	if len(*cards) <= 1 {
+func (this *GMgrCard) QuickSortCLV(values []GCard) {
+	if len(values) <= 1 {
 		return
 	}
-	if begin < 0 {
-		begin = 0
-	}
-	if end >= len(*cards) {
-		end = len(*cards) - 1
-	}
-	if begin < end {
-		temp := (*cards)[begin]
-		i := begin
-		j := end
-		for i < j {
-			for i < j && ((*cards)[j].GetCardColor() < temp.GetCardColor() ||
-				((*cards)[j].GetCardColor() == temp.GetCardColor() && (*cards)[j].GetLogicValue() < temp.GetLogicValue())) {
-				j--
-			}
-			(*cards)[i] = (*cards)[j]
-			for i < j && ((*cards)[j].GetCardColor() > temp.GetCardColor() ||
-				((*cards)[j].GetCardColor() == temp.GetCardColor() && (*cards)[j].GetLogicValue() >= temp.GetLogicValue())) {
-				i++
-			}
-			(*cards)[j] = (*cards)[i]
+	mid, i := values[0], 1
+	head, tail := 0, len(values)-1
+	for head < tail {
+		if values[i].GetCardColor() > mid.GetCardColor() ||
+			(values[i].GetCardColor() == mid.GetCardColor() && values[i].GetLogicValue() > mid.GetLogicValue()) {
+			values[i], values[tail] = values[tail], values[i]
+			tail--
+		} else {
+			values[i], values[head] = values[head], values[i]
+			head++
+			i++
 		}
-		(*cards)[i] = temp
-		this.QuickSortCV(cards, begin, i-1)
-		this.QuickSortCV(cards, i+1, end)
 	}
+	values[head] = mid
+	this.QuickSortCLV(values[:head])
+	this.QuickSortCLV(values[head+1:])
 }
 
 //检测是否胡牌

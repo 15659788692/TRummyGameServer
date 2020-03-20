@@ -13,8 +13,7 @@ type EnterDeskInfo struct {
 	Betting  bool   `json:"betting"`  //当前是否投注中
 	Packed   bool   `json:"Packed"`   //界面上三个按钮的状态
 	Show     bool   `json:"Show"`     //是示请求SHOW的按钮状态
-	Blind    bool   `json:"Blind"`    //Blink按钮状态
-
+	Coins    int64  `json:"coins"`    //玩家的金额
 }
 
 //游戏状态通知
@@ -56,7 +55,7 @@ type GPlayerWinNotice struct {
 type GGiveUpNotice struct {
 	SeatId      int32 //	玩家座位号
 	LosingCoins int64 //	玩家输的金额
-	PlayerCoins int64 //	玩家当前金额
+	SettleCoins int64 //	结算区的总金额
 	IsShow      bool  //	是否是show
 }
 
