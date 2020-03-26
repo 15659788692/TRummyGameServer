@@ -6,10 +6,11 @@ import (
 
 //组牌的类型
 const (
-	Type1stLife     = 6 //第一生命
-	Type2stLife     = 5 //第二生命
-	TypeNeed1stLife = 4 //没有第一生命
-	TypeGroup       = 3 //集
+	Type1stLife     = 7 //第一生命
+	Type2stLife     = 6 //第二生命
+	TypeNeed1stLife = 5 //没有第一生命
+	TypeSequence    = 4 //组合
+	TypeSet         = 3 //集
 	TypeNeed2stLife = 2 //没有第二生命
 	TypeOther       = 1 //杂牌类型
 )
@@ -111,34 +112,35 @@ func (this *GMgrCard) Is2stLife(cards2st []GCard, WildCard GCard) bool {
 	if WildCard.GetCardColor() == Poker.CARD_COLOR_King {
 		WildCard = GCard{Poker.CardBase{Card: Poker.Card_Fang_1}}
 	}
-	tCard := append([]GCard{}, cards2st...)
+	var tCard []GCard
 	var wildCards []GCard
-	for i, v := range tCard {
+	for _, v := range cards2st {
 		if v.GetCardColor() == Poker.CARD_COLOR_King || v.GetCardValue() == WildCard.GetCardValue() {
 			wildCards = append(wildCards, v)
-			cards2st = append(cards2st[:i], cards2st[i+1:]...)
+		} else {
+			tCard = append(tCard, v)
 		}
 	}
 	//如果除万能牌外不超过一张则成立
-	if len(cards2st) <= 1 {
+	if len(tCard) <= 1 {
 		return true
 	}
 	//如果花色不同就不是
-	for _, v := range cards2st {
-		if v.GetCardColor() != cards2st[0].GetCardColor() {
+	for _, v := range tCard {
+		if v.GetCardColor() != tCard[0].GetCardColor() {
 			return false
 		}
 	}
 	//检测同花顺
 	wildNum := int32(len(wildCards))
 	//按A最大2最小排序
-	this.QuickSortLV(cards2st)
+	this.QuickSortLV(tCard)
 	isTrue := true
-	for k, v := range cards2st {
+	for k, v := range tCard {
 		if k == 0 {
 			continue
 		}
-		x := cards2st[k-1].GetLogicValue() - v.GetLogicValue()
+		x := tCard[k-1].GetLogicValue() - v.GetLogicValue()
 		if x > wildNum {
 			isTrue = false
 			break
@@ -150,12 +152,12 @@ func (this *GMgrCard) Is2stLife(cards2st []GCard, WildCard GCard) bool {
 	}
 	//按A最小K最大排序
 	wildNum = int32(len(wildCards))
-	this.QuickSortCV(cards2st)
-	for k, v := range cards2st {
+	this.QuickSortCV(tCard)
+	for k, v := range tCard {
 		if k == 0 {
 			continue
 		}
-		x := cards2st[k-1].GetCardValue() - v.GetCardValue()
+		x := tCard[k-1].GetCardValue() - v.GetCardValue()
 		if x > wildNum {
 			isTrue = false
 			break
@@ -178,25 +180,26 @@ func (this *GMgrCard) IsSetLife(cardsSet []GCard, WildCard GCard) bool {
 	if WildCard.GetCardColor() == Poker.CARD_COLOR_King {
 		WildCard = GCard{Poker.CardBase{Card: Poker.Card_Fang_1}}
 	}
-	tCard := append([]GCard{}, cardsSet...)
+	var tCard []GCard
 	var wildCards []GCard
-	for i, v := range tCard {
+	for _, v := range cardsSet {
 		if v.GetCardColor() == Poker.CARD_COLOR_King || v.GetCardValue() == WildCard.GetCardValue() {
 			wildCards = append(wildCards, v)
-			cardsSet = append(cardsSet[:i], cardsSet[i+1:]...)
+		} else {
+			tCard = append(tCard, v)
 		}
 	}
 	//如果除万能牌外不超过一张则成立
-	if len(cardsSet) <= 1 {
+	if len(tCard) <= 1 {
 		return true
 	}
 	//检测set
-	this.QuickSortCLV(cardsSet)
-	for k, v := range cardsSet {
+	this.QuickSortCLV(tCard)
+	for k, v := range tCard {
 		if k == 0 {
 			continue
 		}
-		if v.GetCardValue() != cardsSet[0].GetCardValue() || v.Card == cardsSet[k-1].Card {
+		if v.GetCardValue() != tCard[0].GetCardValue() || v.Card == cardsSet[k-1].Card {
 			return false
 		}
 	}

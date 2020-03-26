@@ -3,16 +3,29 @@
   <component name="VcsDirectoryMappings">
     <mapping directory="$PROJECT_DIR$" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/src/TeenPatti/TPattiGameServer" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/src/github.com/BurntSushi/toml" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/src/github.com/davecgh/go-spew" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/src/github.com/fsnotify/fsnotify" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/src/github.com/golang/protobuf" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/src/github.com/google/uuid" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/src/github.com/gorilla/websocket" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/src/github.com/hashicorp/hcl" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/src/github.com/konsorten/go-windows-terminal-sequences" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/src/github.com/lonng/nano" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/src/github.com/magiconair/properties" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/src/github.com/mitchellh/mapstructure" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/src/github.com/pborman/uuid" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/src/github.com/pelletier/go-toml" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/src/github.com/pmezard/go-difflib" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/src/github.com/sirupsen/logrus" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/src/github.com/spf13/afero" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/src/github.com/spf13/cast" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/src/github.com/spf13/jwalterweatherman" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/src/github.com/spf13/pflag" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/src/github.com/spf13/viper" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/src/github.com/stretchr/testify" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/src/github.com/subosito/gotenv" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/src/gopkg.in/ini.v1" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/src/gopkg.in/yaml.v2" vcs="Git" />
   </component>
 </project>

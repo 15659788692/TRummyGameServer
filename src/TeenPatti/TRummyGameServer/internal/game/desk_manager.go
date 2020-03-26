@@ -51,7 +51,19 @@ func (this *TRDeskManager) AfterInit() {
 	session.Lifetime.OnClosed(func(s *session.Session) {
 		logger.Println("**************session OnClose :uid ", s.UID())
 		p, _ := this.checkSessionAuther(s)
-		p.disconnect = true
+		if p.isJoin {
+			p.disconnect = true
+		} else { //退出
+			desk := p.desk
+			desk.Mutex.Lock()
+			desk.ExitDesk(p)
+			if desk.PlayersIsEmpty() {
+				delete(this.desks, desk.roomNo)
+			}
+			desk.Mutex.Unlock()
+			p.ExitDesk()
+		}
+
 		// Fixed: 玩家WIFI切换到4G网络不断开, 重连时，将UID设置为illegalSessionUid
 		if s.UID() > 0 {
 
@@ -192,8 +204,6 @@ func (this *TRDeskManager) checkSessionAuther(s *session.Session) (*Player, erro
 
 //进入桌子
 func (this *TRDeskManager) JoinDesk(s *session.Session, data *protocol.JoinDeskRequest) error {
-	fmt.Println("玩家", data.NickName, "请求加入桌子,Uid:", data.Uid)
-	var opts DeskOpts
 	//检测消息
 	p, err := this.checkSessionAuther(s)
 
@@ -212,14 +222,7 @@ func (this *TRDeskManager) JoinDesk(s *session.Session, data *protocol.JoinDeskR
 
 		roomNo := room.Next()
 
-		//测试用
-		opts.bootAmout = 200
-		opts.chaalLimit = 200 * 128
-		opts.maxBlinds = 4
-		opts.potLimit = 200 * 1024
-		opts.betKeepTime = 15
-
-		desk = NewDesk(roomNo, opts)
+		desk = NewDesk(roomNo)
 
 		//设定桌子
 		this.setDesk(roomNo, desk)
@@ -236,10 +239,11 @@ func (this *TRDeskManager) JoinDesk(s *session.Session, data *protocol.JoinDeskR
 		this.playersDesk[s] = desk
 	}
 
-	desk.logger.Println("ResponeJoinDesk.........................")
-	fmt.Println("session", s, p.session)
+	//desk.logger.Println("ResponeJoinDesk.........................")
+	fmt.Println(p.name, "加入房间！")
+	desk.Mutex.Lock()
+	defer desk.Mutex.Unlock()
 	return desk.PlayerJoinAfterInfo(p)
-
 }
 
 ////退出桌子
@@ -280,6 +284,8 @@ func (this *TRDeskManager) OperCard(s *session.Session, msg *protocol.GOperCardR
 			Error:    "玩家没有加入桌子！",
 		})
 	}
+	p.desk.Mutex.Lock()
+	defer p.desk.Mutex.Unlock()
 	return p.desk.OperCard(p, msg, false)
 }
 
@@ -302,6 +308,8 @@ func (this *TRDeskManager) ShowCard(s *session.Session, msg *protocol.GSetHandCa
 			Error:   "玩家没有加入桌子！",
 		})
 	}
+	p.desk.Mutex.Lock()
+	defer p.desk.Mutex.Unlock()
 	return p.desk.ShowCards(p, msg)
 }
 
@@ -311,18 +319,20 @@ func (this *TRDeskManager) Settle(s *session.Session, msg *protocol.GSettleReque
 	if err != nil {
 		logger.Warnf("ShowCard Error:", s.UID())
 		return s.Response(&protocol.GSettleResponse{
-			WinCoins: 0,
-			Error:    autherNotAvailMessage,
+			LoseCoins: 0,
+			Error:     autherNotAvailMessage,
 		})
 	}
 	//检测玩家是否在桌子中
 	if p.desk == nil {
 		logger.Debug("ShowCard Error:", s.UID())
 		return s.Response(&protocol.GSettleResponse{
-			WinCoins: 0,
-			Error:    "玩家没有加入桌子！",
+			LoseCoins: 0,
+			Error:     "玩家没有加入桌子！",
 		})
 	}
+	p.desk.Mutex.Lock()
+	defer p.desk.Mutex.Unlock()
 	return p.desk.Settle(p, msg, false)
 }
 
@@ -344,6 +354,8 @@ func (this *TRDeskManager) GiveUp(s *session.Session, msg *protocol.GGiveUpReque
 		})
 	}
 	fmt.Println("玩家请求弃牌！")
+	p.desk.Mutex.Lock()
+	defer p.desk.Mutex.Unlock()
 	return p.desk.GiveUp(p, false, msg)
 }
 
@@ -364,5 +376,7 @@ func (this *TRDeskManager) OutCardRecord(s *session.Session, msg *protocol.GOutC
 			Success: false,
 		})
 	}
+	p.desk.Mutex.Lock()
+	defer p.desk.Mutex.Unlock()
 	return p.desk.OutCardRecord(p)
 }

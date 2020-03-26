@@ -21,6 +21,7 @@
         <method importPath="TeenPatti/TRummyGameServer/internal/game" receiver="*Desk" name="OperCard" />
         <method importPath="github.com/lonng/nano/session" receiver="*Session" name="Push" />
         <method importPath="github.com/lonng/nano" receiver="*Group" name="Add" />
+        <method importPath="github.com/lonng/nano" receiver="*Group" name="Multicast" />
       </methods>
     </inspection_tool>
   </profile>

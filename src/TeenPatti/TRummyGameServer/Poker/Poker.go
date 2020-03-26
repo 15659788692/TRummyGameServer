@@ -2,6 +2,7 @@ package Poker
 
 import (
 	"math/rand"
+	"strconv"
 	"time"
 )
 
@@ -18,12 +19,24 @@ func (this *MgrCard) InitNormalCards() {
 	begaincard := []int{Card_Fang_1, Card_Mei_1, Card_Hong_1, Card_Hei_1}
 	for _, v := range begaincard {
 		for j := 0; j < 13; j++ {
-			this.MVCard = append(this.MVCard, CardBase{Card: int32(v + j)})
+			card := CardBase{Card: int32(v + j)}
+			switch card.GetCardColor() {
+			case 0:
+				card.Name += "方块"
+			case 1:
+				card.Name += "梅花"
+			case 2:
+				card.Name += "红桃"
+			case 3:
+				card.Name += "黑桃"
+			}
+			card.Name += strconv.Itoa(int(card.GetCardValue()))
+			this.MVCard = append(this.MVCard, card)
 		}
 	}
 
 	// 添加大小王
-	this.MVCard = append(this.MVCard, CardBase{Card: Card_King_1}, CardBase{Card: Card_King_2})
+	this.MVCard = append(this.MVCard, CardBase{Card: Card_King_1, Name: "鬼牌"}, CardBase{Card: Card_King_2, Name: "鬼牌"})
 }
 
 //不含大小王的52张牌
@@ -31,7 +44,19 @@ func (this *MgrCard) InitNoKingCards() {
 	begaincard := []int{Card_Fang_1, Card_Mei_1, Card_Hong_1, Card_Hei_1}
 	for _, v := range begaincard {
 		for j := 0; j < 13; j++ {
-			this.MVCard = append(this.MVCard, CardBase{Card: int32(v + j)})
+			card := CardBase{Card: int32(v + j)}
+			switch card.GetCardColor() {
+			case 0:
+				card.Name += "方块"
+			case 1:
+				card.Name += "梅花"
+			case 2:
+				card.Name += "红桃"
+			case 3:
+				card.Name += "黑桃"
+			}
+			card.Name += strconv.Itoa(int(card.GetCardValue()))
+			this.MVCard = append(this.MVCard, card)
 		}
 	}
 }

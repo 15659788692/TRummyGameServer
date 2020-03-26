@@ -59,7 +59,7 @@ func newPlayer(s *session.Session, uid int64, nicename, head, ip string, sex int
 		Point:      0,
 		CardsSet:   [][]int32{},
 	}
-	p.Coins = rand.Int63()%5000 + 1000
+	p.Coins = rand.Int63()%10000 + 500000
 	//绑定对应的session
 	p.bindSession(s)
 
@@ -179,4 +179,22 @@ func (p *Player) IsMyHandCard(cards []int32) bool {
 		}
 	}
 	return true
+}
+
+//获取手牌名
+func (p *Player) GetHandCardsString() string {
+	var str = "玩家手牌："
+	for _, v := range p.HandCards {
+		str += v.Name
+	}
+	return str
+}
+
+//退出桌子
+func (p *Player) ExitDesk() {
+	p.isJoin = false
+	p.isBanker = false
+	p.sitdown = false
+	p.desk = nil
+	p.InitPlayer()
 }

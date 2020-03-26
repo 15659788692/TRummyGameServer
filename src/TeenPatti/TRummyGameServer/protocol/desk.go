@@ -156,8 +156,11 @@ type GSettleRequect struct {
 }
 
 type GSettleResponse struct {
-	WinCoins int64
-	Error    string //报错信息
+	LoseCoins   int64
+	PointNum    int32
+	SettleCoins int64
+	MyCoins     int64
+	Error       string //报错信息
 }
 
 //放弃
@@ -170,6 +173,7 @@ type GGiveUpResponse struct {
 	Coins       int64
 	TotalCoins  int64 //桌子上的钱
 	PlayerCoins int64
+	PointNum    int32
 }
 
 //请求出牌记录

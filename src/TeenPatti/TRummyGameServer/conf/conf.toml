@@ -1,0 +1,14 @@
+title = "TOML CONF"
+[Server]
+    ip = "127.0.0.1"
+    port = 3000
+[Desk]
+    #游戏状态时间：0.等待玩家加入1.游戏开始倒计时2.发牌3.每个玩家操作时间4.结算时间5.结束动画6.游戏终止动画
+    GameStateTime = [0,7,9,30,20,10,10]
+
+    DeskFullplayerNum   = 5  #桌子的满玩家数量
+    DeskMinplayerNum    = 2  #开始游戏的最小人数
+    Desk1RoundLosePoint = 20 #第一轮弃牌输的点数
+    Desk2RoundLosePoint = 40 #第二轮弃牌输的点数
+    DeskMaxLosePoint    = 80 #最多输80点
+

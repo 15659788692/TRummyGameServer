@@ -7,13 +7,18 @@ const (
 	NoticeGameStrat    = "Rummy.NoticeGameStrat"    //广播游戏开始
 	NoticeGameOperCard = "Rummy.NoticeGameOperCard" //广播玩家的操作
 	NoticeGameWin      = "Rummy.NoticeGameWin"      //广播玩家赢牌
+	NoticeSettle       = "Rummy.NoticeSettle"       //广播结算
 	NoticeGiveUp       = "Rummy.NoticeGiveUp"       //广播玩家放弃
 	NoticeEndInfo      = "Rummy.NoticeEndInfo"      //广播结算信息
+	NoticePlayerExit   = "Rummy.NoticePlayerExit"   //广播玩家退出
 )
 
 //单独推送
 const (
-	NoticeSendCard    = "Rummy.NoticeSendCard"    //发牌
-	NoticeOperOutTime = "Rummy.NoticeOperOutTime" //操作超时
-	NoticeLoseGame    = "Rummy.NoticeLoseGame"    //show超时
+	PushSendCard    = "Rummy.PushSendCard"    //发牌
+	PushRoundInfo   = "Rummy.PushRoundInfo"   //回合桌子信息通知
+	PushOperOutTime = "Rummy.PushOperOutTime" //操作超时
+	PushLoseGame    = "Rummy.PushLoseGame"
+	PushWinGame     = "Rummy.PushWinGame"
+	PushSettle      = "Rummy.PushSettle"
 )

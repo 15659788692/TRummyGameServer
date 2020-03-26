@@ -37,6 +37,11 @@ type GSendCardNotice struct {
 	FristCard int32
 }
 
+//回合桌子信息
+type GRoundInfoNotice struct {
+	GiveUpCoins int64
+}
+
 //操作广播
 type GPlayerOperNotice struct {
 	SeatId     int32 //座位号
@@ -48,7 +53,8 @@ type GPlayerOperNotice struct {
 
 //胡牌广播
 type GPlayerWinNotice struct {
-	SeatId int32 //座位号
+	SeatId      int32 //座位号
+	SettleCoins int64 //结算金额
 }
 
 //放弃广播
@@ -56,7 +62,16 @@ type GGiveUpNotice struct {
 	SeatId      int32 //	玩家座位号
 	LosingCoins int64 //	玩家输的金额
 	SettleCoins int64 //	结算区的总金额
+	Point       int32 //	输的点数
 	IsShow      bool  //	是否是show
+}
+
+//广播结算
+type GSettleNotice struct {
+	SeatId      int32 //	玩家座位号
+	LosingCoins int64 //	玩家输的金额
+	SettleCoins int64 //	结算区的总金额
+	Point       int32 //	输的点数
 }
 
 //结算界面广播
@@ -70,4 +85,8 @@ type PlayerEndInfo struct {
 	CardsSets [][]int32
 	Point     int32
 	Coins     int64
+}
+
+type GPlayerExitNotice struct {
+	SeatId int32 //	玩家座位号
 }

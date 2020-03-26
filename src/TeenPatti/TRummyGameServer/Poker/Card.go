@@ -95,6 +95,7 @@ const (
 type CardBase struct {
 	GetCard
 	Card int32
+	Name string
 }
 
 type GetCard interface {

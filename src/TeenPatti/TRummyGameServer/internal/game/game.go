@@ -12,6 +12,7 @@ import (
 	"github.com/lonng/nano/serialize/json"
 	log "github.com/sirupsen/logrus"
 )
+import "TeenPatti/TRummyGameServer/conf"
 
 var (
 	version = ""            // 游戏版本
@@ -51,7 +52,7 @@ func Startup() {
 	//pip.Outbound().PushBack(c.outbound)
 	//	addr := fmt.Sprintf(":%d", viper.GetInt("game-server.port"))
 
-	addr := fmt.Sprintf(":%d", 3000)
+	addr := fmt.Sprintf(":%d", conf.Conf.Server.Port)
 
 	/*nano.Listen(addr,
 		nano.WithHeartbeatInterval(time.Duration(heartbeat)*time.Second),
