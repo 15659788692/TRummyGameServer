@@ -1,16 +1,16 @@
 package io
 
-
 import (
+	"encoding/json"
 	"fmt"
+	"golang.org/x/net/websocket"
 	"log"
 	"net"
 	"sync"
-	"encoding/json"
 
-	"TeenPatti/TPClientTest/internal/codec"
-	"TeenPatti/TPClientTest/internal/message"
-	"TeenPatti/TPClientTest/internal/packet"
+	"Robot/TRummyGameRobot/internal/codec"
+	"Robot/TRummyGameRobot/internal/message"
+	"Robot/TRummyGameRobot/internal/packet"
 )
 
 var (
@@ -73,7 +73,7 @@ func NewConnector() *Connector {
 // Start connect to the server and send/recv between the c/s
 func (c *Connector) Start(addr string) error {
 
-	conn, err := net.Dial("tcp", addr)
+	conn, err := websocket.Dial(addr, "webSocket", addr)
 	if err != nil {
 		return err
 	}
@@ -85,7 +85,7 @@ func (c *Connector) Start(addr string) error {
 	// send handshake packet
 	c.send(hsd)
 
-	fmt.Println("connect ok:", addr )
+	fmt.Println("connect ok:", addr)
 
 	// read and process network message
 	go c.read()
@@ -99,11 +99,9 @@ func (c *Connector) OnConnected(callback func()) {
 }
 
 // Request send a request to server and register a callbck for the response
-func (c *Connector) Request(route string, v interface{},  callback Callback) error {
-
+func (c *Connector) Request(route string, v interface{}, callback Callback) error {
 
 	data, err := json.Marshal(v)
-
 
 	if err != nil {
 		return err
@@ -126,9 +124,9 @@ func (c *Connector) Request(route string, v interface{},  callback Callback) err
 }
 
 // Notify send a notification to server
-func (c *Connector) Notify(route string, v interface{}   ) error {
+func (c *Connector) Notify(route string, v interface{}) error {
 
-	data, err := json.Marshal( v )
+	data, err := json.Marshal(v)
 
 	if err != nil {
 		return err
@@ -275,16 +273,15 @@ func (c *Connector) processPacket(p *packet.Packet) {
 
 	case packet.Heartbeat: //处理心跳
 
-
 		//fmt.Println("packet.HeartBeat:")
 
-		pp ,err2 := codec.Encode( packet.HandshakeAck, nil)
+		pp, err2 := codec.Encode(packet.HandshakeAck, nil)
 
 		if err2 != nil {
 
 		}
 
-		c.send( pp  )
+		c.send(pp)
 
 	}
 }
@@ -311,4 +308,3 @@ func (c *Connector) processMessage(msg *message.Message) {
 		c.setResponseHandler(msg.ID, nil)
 	}
 }
-

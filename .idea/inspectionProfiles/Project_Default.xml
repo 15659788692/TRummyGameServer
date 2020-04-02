@@ -3,7 +3,8 @@
     <option name="myName" value="Project Default" />
     <inspection_tool class="GoNilness" enabled="false" level="WARNING" enabled_by_default="false" />
     <inspection_tool class="GoReceiverNames" enabled="false" level="WEAK WARNING" enabled_by_default="false" />
-    <inspection_tool class="GoUnhandledErrorResult" enabled="true" level="WARNING" enabled_by_default="true">
+    <inspection_tool class="GoStructTag" enabled="false" level="WARNING" enabled_by_default="false" />
+    <inspection_tool class="GoUnhandledErrorResult" enabled="false" level="WARNING" enabled_by_default="false">
       <methods>
         <method importPath="hash" receiver="Hash" name="Write" />
         <method importPath="strings" receiver="*Builder" name="Write" />
@@ -23,6 +24,12 @@
         <method importPath="github.com/lonng/nano" receiver="*Group" name="Add" />
         <method importPath="github.com/lonng/nano" receiver="*Group" name="Multicast" />
       </methods>
+    </inspection_tool>
+    <inspection_tool class="GoUnusedGlobalVariable" enabled="false" level="WARNING" enabled_by_default="false" />
+    <inspection_tool class="SpellCheckingInspection" enabled="false" level="TYPO" enabled_by_default="false">
+      <option name="processCode" value="true" />
+      <option name="processLiterals" value="true" />
+      <option name="processComments" value="true" />
     </inspection_tool>
   </profile>
 </component>

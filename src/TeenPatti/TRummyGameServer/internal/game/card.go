@@ -2,6 +2,8 @@ package game
 
 import (
 	"TeenPatti/TRummyGameServer/Poker"
+	"TeenPatti/TRummyGameServer/conf"
+	"fmt"
 )
 
 //组牌的类型
@@ -71,7 +73,9 @@ func (this *GMgrCard) Is1stLife(cards1st []GCard) bool {
 		}
 	}
 	//按A最大2最小排序
+	fmt.Println("排序前的牌：", cards1st)
 	this.QuickSortLV(cards1st)
+	fmt.Println("排序后的牌：", cards1st)
 	//检测同花顺子
 	isTrue := true
 	for k, v := range cards1st {
@@ -140,8 +144,8 @@ func (this *GMgrCard) Is2stLife(cards2st []GCard, WildCard GCard) bool {
 		if k == 0 {
 			continue
 		}
-		x := tCard[k-1].GetLogicValue() - v.GetLogicValue()
-		if x > wildNum {
+		x := tCard[k-1].GetLogicValue() - v.GetLogicValue() - 1
+		if x > wildNum || x < 0 {
 			isTrue = false
 			break
 		}
@@ -157,8 +161,8 @@ func (this *GMgrCard) Is2stLife(cards2st []GCard, WildCard GCard) bool {
 		if k == 0 {
 			continue
 		}
-		x := tCard[k-1].GetCardValue() - v.GetCardValue()
-		if x > wildNum {
+		x := tCard[k-1].GetCardValue() - v.GetCardValue() - 1
+		if x > wildNum || x < 0 {
 			isTrue = false
 			break
 		}
@@ -199,7 +203,7 @@ func (this *GMgrCard) IsSetLife(cardsSet []GCard, WildCard GCard) bool {
 		if k == 0 {
 			continue
 		}
-		if v.GetCardValue() != tCard[0].GetCardValue() || v.Card == cardsSet[k-1].Card {
+		if v.GetCardValue() != tCard[0].GetCardValue() || v.Card == tCard[k-1].Card {
 			return false
 		}
 	}
@@ -279,30 +283,50 @@ func (this *GMgrCard) QuickSortCLV(values []GCard) {
 //检测是否胡牌
 func (this *GMgrCard) CheckoutHu(cards [][]GCard, WildCard GCard) (bool, int64) {
 	tCards := append([][]GCard{}, cards...)
+	fmt.Println("检测牌组：", tCards)
 	//检测1st life
 	Is1stlife := false
 	for k, v := range tCards {
 		if this.Is1stLife(v) {
-			tCards = append(tCards[:k], tCards[k+1:]...)
+			if len(tCards) > k+1 {
+				tCards = append(tCards[:k], tCards[k+1:]...)
+			} else {
+				tCards = tCards[:k]
+			}
 			Is1stlife = true
 			break
 		}
 	}
 	if !Is1stlife {
-		return false, this.ComputePoint(tCards, WildCard)
+		point := this.ComputePoint(tCards, WildCard, Is1stlife)
+		if point > int64(conf.Conf.Desk.MaxLosePoint) {
+			point = int64(conf.Conf.Desk.MaxLosePoint)
+		}
+		return false, point
 	}
+	fmt.Println("检测牌组：", tCards)
 	//检测2st life
 	Is2stlife := false
 	for k, v := range tCards {
 		if this.Is2stLife(v, WildCard) {
-			tCards = append(tCards[:k], tCards[k+1:]...)
+			if len(tCards) > k+1 {
+				tCards = append(tCards[:k], tCards[k+1:]...)
+			} else {
+				tCards = tCards[:k]
+			}
 			Is2stlife = true
 			break
 		}
 	}
+	fmt.Println("检测牌组：", tCards)
 	if !Is2stlife {
-		return false, this.ComputePoint(tCards, WildCard)
+		point := this.ComputePoint(tCards, WildCard, Is1stlife)
+		if point > int64(conf.Conf.Desk.MaxLosePoint) {
+			point = int64(conf.Conf.Desk.MaxLosePoint)
+		}
+		return false, point
 	}
+	fmt.Println("检测牌组：", tCards)
 	//检测其他牌组是否成型
 	var falsecard [][]GCard
 	for _, v := range tCards {
@@ -312,13 +336,18 @@ func (this *GMgrCard) CheckoutHu(cards [][]GCard, WildCard GCard) (bool, int64) 
 		}
 	}
 	if len(falsecard) > 0 {
-		return false, this.ComputePoint(falsecard, WildCard)
+
+		point := this.ComputePoint(falsecard, WildCard, Is1stlife)
+		if point > int64(conf.Conf.Desk.MaxLosePoint) {
+			point = int64(conf.Conf.Desk.MaxLosePoint)
+		}
+		return false, point
 	}
 	return true, 0
 }
 
 //计算点数
-func (this *GMgrCard) ComputePoint(cards [][]GCard, wildCard GCard) int64 {
+func (this *GMgrCard) ComputePoint(cards [][]GCard, wildCard GCard, have1stlife bool) int64 {
 	//挑出万能牌
 	//如果万能牌是王，那么A也是万能牌
 	if wildCard.GetCardColor() == Poker.CARD_COLOR_King {
@@ -328,20 +357,20 @@ func (this *GMgrCard) ComputePoint(cards [][]GCard, wildCard GCard) int64 {
 	var tCard []GCard     //杂牌
 	for _, v := range cards {
 		for _, v1 := range v {
-			if v1.GetCardColor() == Poker.CARD_COLOR_King || v1.GetCardValue() == wildCard.GetCardValue() {
+			if v1.GetCardColor() == Poker.CARD_COLOR_King || (v1.GetCardValue() == wildCard.GetCardValue() && have1stlife) {
 				wildCards = append(wildCards, v1)
 			} else {
 				tCard = append(tCard, v1)
 			}
 		}
 	}
-	var coins int64
+	var point int64
 	for _, v := range tCard {
 		c := int64(v.GetLogicValue())
 		if c > 10 {
 			c = 10
 		}
-		coins += c
+		point += c
 	}
-	return coins
+	return point
 }

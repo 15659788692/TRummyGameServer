@@ -4,24 +4,24 @@ import "time"
 
 func NewManager() *manager {
 	return &manager{
-		Addr: "192.168.0.141:3000",
+		Addr: "ws://192.168.0.141:3000/",
 	}
 }
 
 type manager struct {
-	Robot []*User
+	Robot []*Client
 	Addr  string
 }
 
 func (this *manager) Run() {
-	for i := 0; i < 10; i++ {
-		this.AddClient()
+	for i := 0; i < 2; i++ {
+		this.Robot = append(this.Robot, this.AddClient())
 		time.Sleep(time.Second)
 	}
 }
 
-func (this *manager) AddClient() bool {
-	user := NewUser()
-	user.Start(this.Addr)
-	return true
+func (this *manager) AddClient() *Client {
+	client := NewUser()
+	client.Start(this.Addr)
+	return client
 }

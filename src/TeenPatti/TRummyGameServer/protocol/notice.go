@@ -9,6 +9,7 @@ type EnterDeskInfo struct {
 	Score    int    `json:"score"`    //玩家的余额
 	StarNum  int    `json:"starNum"`  //星级个数
 	IsBanker bool   `json:"isBanker"` //是否是庄家
+	IsKing   bool   `json:"isKing`    //是否是房主
 	Sitdown  bool   `json:"sitdown"`  //是否坐下
 	Betting  bool   `json:"betting"`  //当前是否投注中
 	Packed   bool   `json:"Packed"`   //界面上三个按钮的状态
@@ -20,15 +21,16 @@ type EnterDeskInfo struct {
 type GGameStateNotice struct {
 	GameState int32 //状态
 	Time      int32 //倒计时
+	TotalTime int32 //总时间
 	OperateId int32 //操作状态下操作的玩家
 }
 
 //游戏开始通知
-type GGameStartNotice struct {
-	BankerId int32 //座位号
-	FristID  int32 //首出玩家的座位号
-
-}
+//type GGameStartNotice struct {
+//	BankerId int32 //座位号
+//	FristID  int32 //首出玩家的座位号
+//
+//}
 
 //发牌
 type GSendCardNotice struct {
@@ -54,7 +56,9 @@ type GPlayerOperNotice struct {
 //胡牌广播
 type GPlayerWinNotice struct {
 	SeatId      int32 //座位号
+	WinCoins    int64 //玩家赢的钱
 	SettleCoins int64 //结算金额
+
 }
 
 //放弃广播

@@ -15,6 +15,7 @@ type DeskInfo struct {
 	CardsNum      int32           `json:"cardsNum"`      //牌堆剩余张数
 	OperSeatId    int32           `json:"operSeatId"`    //当前操作的玩家座位号
 	BankerSeatId  int32           `json:"bankerSeatId"`  //庄家的座位号
+	KingSeatId    int32           `json:"kingSeatId"`    //房主的座位号
 	FirstSeatId   int32           `json:"firstSeatId"`   //首出玩家的座位号
 	UserSeatId    int32           `json:"userSeatId"`    //玩家自己的座位号
 	PlayersInfo   []EnterDeskInfo `json:"playersInfo"`   //所有玩家的详细信息
@@ -133,7 +134,7 @@ type GOperCardResponse struct {
 
 type GSetHandCardRequest struct {
 	CardsSets []CardsSet
-	IsFinish  bool
+	Phase     int32
 }
 
 type CardsSet struct {
@@ -146,7 +147,8 @@ type GSetHandCardResponse struct {
 	Success    bool //是否成功
 	CardsSets  []CardsSet
 	TotalPoint int32
-	IsHu       bool   //是否胡牌
+	IsHu       bool //是否胡牌
+	Phase      int32
 	Error      string //报错信息
 }
 

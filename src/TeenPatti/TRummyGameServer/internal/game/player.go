@@ -38,6 +38,7 @@ type Player struct {
 	CardsSet  [][]int32
 	Timeout   int32 //连续超时次数
 	Point     int32 //点数
+	IsKing    bool
 }
 
 func newPlayer(s *session.Session, uid int64, nicename, head, ip string, sex int) *Player {
@@ -59,7 +60,8 @@ func newPlayer(s *session.Session, uid int64, nicename, head, ip string, sex int
 		Point:      0,
 		CardsSet:   [][]int32{},
 	}
-	p.Coins = rand.Int63()%10000 + 500000
+	p.IsKing = false
+	p.Coins = rand.Int63()%500000 + 10000
 	//绑定对应的session
 	p.bindSession(s)
 

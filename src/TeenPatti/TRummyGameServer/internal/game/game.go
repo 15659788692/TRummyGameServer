@@ -2,9 +2,10 @@ package game
 
 import (
 	"fmt"
-	"math/rand"
 
-	// "net/http"
+	"math/rand"
+	"net/http"
+
 	"time"
 
 	"github.com/lonng/nano"
@@ -71,7 +72,7 @@ func Startup() {
 		nano.WithSerializer(json.NewSerializer()),
 		nano.WithComponents(comps),
 		nano.WithIsWebsocket(true),
-		// nano.WithCheckOriginFunc(func(_ *http.Request) bool { return true }), //
-		nano.WithDebugMode(), //debug模式
+		nano.WithCheckOriginFunc(func(_ *http.Request) bool { return true }), //
+		nano.WithDebugMode(),                                                 //debug模式
 	)
 }
