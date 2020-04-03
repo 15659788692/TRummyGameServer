@@ -23,7 +23,8 @@ import (
 	"TeenPatti/TRummyGameServer/protocol"
 )
 
-const ( //游戏状态
+//游戏状态
+const (
 	GameStateWaitJoin  = 0
 	GameStateWaitStart = 1
 	GameStateSendCard  = 2
@@ -34,10 +35,14 @@ const ( //游戏状态
 	GameStateEnd       = 5
 	GameStateAbort     = 6
 )
+
+//游戏状态时间
 const (
 	GameStatePlayAVTime    = 1
 	GameStateStettleAVTime = 3
 )
+
+//组牌操作
 const (
 	Unspecified = 0
 	beforeShow  = 1 // show操作前尝试检测玩家手上剩余的牌能不能胡用的
@@ -202,16 +207,20 @@ func (d *Desk) PlayerJoinAfterInfo(p *Player) error {
 	// d.playMutex.Lock()
 	// defer d.playMutex.Unlock()
 	//广播玩家加入信息
-	d.group.Multicast(NoticePlayerJoin, &protocol.EnterDeskInfo{
-		SeatPos:  int(p.seatPos),
-		Nickname: p.name,
-		Sex:      p.sex,
-		HeadUrl:  p.head,
-		StarNum:  p.starNum,
-		IsBanker: p.isBanker,
-		Sitdown:  p.sitdown,
-		Betting:  false, /*p.IsBetting()*/
-		Show:     p.showed,
+	d.group.Multicast(NoticePlayerState, &protocol.PlayerStateNotice{
+		SeatId:      p.seatPos,
+		PlayerState: PlayerStateJoin,
+		PlayerInfo: protocol.EnterDeskInfo{
+			SeatPos:  p.seatPos,
+			Nickname: p.name,
+			Sex:      p.sex,
+			HeadUrl:  p.head,
+			StarNum:  p.starNum,
+			IsBanker: p.isBanker,
+			Sitdown:  p.sitdown,
+			LiXian:   p.disconnect,
+			Show:     p.showed,
+		},
 	}, func(s *session.Session) bool {
 		if s == p.session {
 			return false
@@ -260,25 +269,22 @@ func (d *Desk) GetDeskInfo(p *Player) protocol.DeskInfo {
 		UserSeatId:    p.seatPos,
 	}
 	for _, v := range d.seatPlayers {
-
 		deskInfo.PlayersInfo = append(deskInfo.PlayersInfo, protocol.EnterDeskInfo{
-			SeatPos:  int(v.seatPos),
+			SeatPos:  v.seatPos,
 			Nickname: v.name,
 			Sex:      v.sex,
 			HeadUrl:  v.head,
 			StarNum:  v.starNum,
 			IsBanker: v.isBanker,
 			Sitdown:  v.sitdown,
+			LiXian:   v.disconnect,
 			IsKing:   v.IsKing,
-			Betting:  false,
 			Show:     v.showed,
 			Coins:    v.Coins,
 		})
 	}
 	//游戏开始，自己不在游戏中
-	if len(d.PublicCard) > 0 {
-		deskInfo.PublicCard = d.PublicCard[len(d.PublicCard)-1].Card
-	}
+	deskInfo.PublicCard = d.GetPublicCard().Card
 	return deskInfo
 }
 func (this *Desk) start(interface{}) {
@@ -321,7 +327,7 @@ func (this *Desk) start(interface{}) {
 		tcard := p.HandCards[0]
 		for k, v := range p.HandCards {
 			if v.GetCardColor() != tcard.GetCardColor() {
-				p.CardsSet = append(p.CardsSet, this.GCardToInt32(p.HandCards[t:k]))
+				p.CardsSet = append(p.CardsSet, protocol.CardsSet{Cards: this.GCardToInt32(p.HandCards[t:k])})
 				t = k
 				tcard = v
 			}
@@ -387,7 +393,7 @@ func (this *Desk) start(interface{}) {
 		p.session.Push(PushSendCard, &protocol.GSendCardNotice{
 			HandCards: handcard,
 			WildCard:  this.WildCard.Card,
-			FristCard: this.PublicCard[len(this.PublicCard)-1].Card,
+			FristCard: this.GetPublicCard().Card,
 		})
 	}
 	this.ClearTimer()
@@ -467,10 +473,43 @@ func (this *Desk) PlayeroperOutTime(interface{}) {
 	}
 	//出牌操作
 	if len(handcard) == 14 {
-		this.OperCard(p, &protocol.GOperCardRequest{
-			Opertion: 3,
-			OperCard: p.HandCards[len(p.HandCards)-1].Card,
-		}, true)
+		fmt.Println("牌组：", p.CardsSet)
+		var tcards [][]GCard
+		card := p.HandCards[len(p.HandCards)-1].Card
+		x := -1
+		y := -1
+		for i, v := range p.CardsSet {
+			var s []GCard
+			for j, v1 := range v.Cards {
+				if v1 == card && (x == -1 || len(p.CardsSet[x].Cards) > len(v.Cards)) {
+					x = i
+					y = j
+				}
+				s = append(s, GCard{Poker.CardBase{Card: v1}})
+			}
+			if len(s) > 0 {
+				tcards = append(tcards, s)
+			}
+		}
+		if x != -1 && y != -1 {
+			tcards[x] = append(tcards[x][:y], tcards[x][y+1:]...)
+			if len(tcards[x]) == 0 {
+				tcards = append(tcards[:x], tcards[x+1:]...)
+			}
+		}
+		IsHu, _ := this.CardMgr.CheckoutHu(tcards, this.WildCard)
+		if IsHu {
+			this.OperCard(p, &protocol.GOperCardRequest{
+				Opertion: 4,
+				OperCard: p.HandCards[len(p.HandCards)-1].Card,
+			}, true)
+		} else {
+			this.OperCard(p, &protocol.GOperCardRequest{
+				Opertion: 3,
+				OperCard: p.HandCards[len(p.HandCards)-1].Card,
+			}, true)
+		}
+
 		p.Timeout++
 		p.deposit = true
 	}
@@ -527,13 +566,13 @@ func (this *Desk) OperCard(p *Player, msg *protocol.GOperCardRequest, IsOuttime 
 	//摸牌公摊牌
 	if msg.Opertion == 1 && len(p.HandCards) == 13 {
 		//公摊牌是万能牌不能摸哦
-		operCard := this.PublicCard[len(this.PublicCard)-1]
+		operCard := this.GetPublicCard()
 		wildCard := this.WildCard
 		if wildCard.GetCardColor() == Poker.CARD_COLOR_King {
 			wildCard.Card = Poker.Card_Fang_1
 		}
-		if (operCard.GetCardValue() == wildCard.GetCardValue() ||
-			operCard.GetCardColor() == Poker.CARD_COLOR_King) && len(this.PublicCard) > 1 {
+		if (operCard.GetCardValue() == wildCard.GetCardValue() || operCard.GetCardColor() == Poker.CARD_COLOR_King) &&
+			len(this.PublicCard) > 1 {
 			return p.session.Response(&protocol.GOperCardResponse{
 				Opertion: 0,
 				Error:    "公摊牌是万能牌不能摸哦！",
@@ -542,25 +581,21 @@ func (this *Desk) OperCard(p *Player, msg *protocol.GOperCardRequest, IsOuttime 
 		//公摊牌不是万能牌
 		p.HandCards = append(p.HandCards, operCard)
 		this.PublicCard = append([]GCard{}, this.PublicCard[:len(this.PublicCard)-1]...)
-		publicCard := int32(0)
-		if len(this.PublicCard) != 0 {
-			publicCard = this.PublicCard[len(this.PublicCard)-1].Card
-		}
 		msgResponse.OperCard = operCard.Card
-		msgResponse.PublicCard = publicCard
+		msgResponse.PublicCard = this.GetPublicCard().Card
 		msgResponse.Error = ""
 		msgNotice.OperCard = operCard.Card
-		msgNotice.PublicCard = publicCard
+		msgNotice.PublicCard = this.GetPublicCard().Card
 	}
 	//摸牌堆的牌
 	if msg.Opertion == 2 && len(p.HandCards) == 13 {
 		operCard := this.CardMgr.SendCard(1)
 		p.HandCards = append(p.HandCards, operCard[0])
 		msgResponse.OperCard = operCard[0].Card
-		msgResponse.PublicCard = this.PublicCard[len(this.PublicCard)-1].Card
+		msgResponse.PublicCard = this.GetPublicCard().Card
 		msgResponse.Error = ""
 		msgNotice.OperCard = 0
-		msgNotice.PublicCard = this.PublicCard[len(this.PublicCard)-1].Card
+		msgNotice.PublicCard = this.GetPublicCard().Card
 	}
 	//出牌
 	if msg.Opertion == 3 && len(p.HandCards) == 14 {
@@ -573,10 +608,10 @@ func (this *Desk) OperCard(p *Player, msg *protocol.GOperCardRequest, IsOuttime 
 		}
 		this.PublicCard = append(this.PublicCard, GCard{Poker.CardBase{Card: msg.OperCard}})
 		msgResponse.OperCard = msg.OperCard
-		msgResponse.PublicCard = this.PublicCard[len(this.PublicCard)-1].Card
+		msgResponse.PublicCard = this.GetPublicCard().Card
 		msgResponse.Error = ""
 		msgNotice.OperCard = msg.OperCard
-		msgNotice.PublicCard = this.PublicCard[len(this.PublicCard)-1].Card
+		msgNotice.PublicCard = this.GetPublicCard().Card
 	}
 	//show（胡了）
 	if msg.Opertion == 4 && len(p.HandCards) == 14 {
@@ -587,10 +622,10 @@ func (this *Desk) OperCard(p *Player, msg *protocol.GOperCardRequest, IsOuttime 
 			})
 		}
 		msgResponse.OperCard = msg.OperCard
-		msgResponse.PublicCard = this.PublicCard[len(this.PublicCard)-1].Card
+		msgResponse.PublicCard = this.GetPublicCard().Card
 		msgResponse.Error = ""
 		msgNotice.OperCard = msg.OperCard
-		msgNotice.PublicCard = this.PublicCard[len(this.PublicCard)-1].Card
+		msgNotice.PublicCard = this.GetPublicCard().Card
 		this.ShowCard = GCard{Poker.CardBase{Card: msg.OperCard}}
 		this.ShowPlayer = p.seatPos
 	}
@@ -667,7 +702,7 @@ func (this *Desk) ShowCards(p *Player, msg *protocol.GSetHandCardRequest) error 
 	var tset []protocol.CardsSet
 	fmt.Printf("整理牌请求：%v ", msg)
 	tset, msgResponse.TotalPoint = this.HandleCardsSet(msg.CardsSets)
-	p.CardsSet = this.CardsSetToInt32(tset)
+	p.CardsSet = tset
 	msgResponse.CardsSets = tset
 	msgResponse.Success = true
 	msgResponse.Phase = msg.Phase
@@ -683,7 +718,7 @@ func (this *Desk) ShowCards(p *Player, msg *protocol.GSetHandCardRequest) error 
 	if msgResponse.TotalPoint != 0 {
 		fmt.Println("玩家show牌失败弃牌！")
 		this.ClearTimer()
-		_ = this.GiveUp(p, true, &protocol.GGiveUpRequect{Cards: p.CardsSet})
+		_ = this.GiveUp(p, true, &protocol.GGiveUpRequect{Cards: this.CardsSetToInt32(p.CardsSet)})
 		this.ShowCard = GCard{}
 		this.ShowPlayer = -1
 		return err
@@ -727,7 +762,7 @@ func (this *Desk) SettleTimeOut(interface{}) {
 			continue
 		}
 		_ = this.Settle(v, &protocol.GSettleRequect{
-			Cards: v.CardsSet,
+			Cards: this.CardsSetToInt32(v.CardsSet),
 		}, true)
 	}
 }
@@ -922,7 +957,7 @@ func (this *Desk) GiveUp(p *Player, isOutTime bool, msg *protocol.GGiveUpRequect
 			})
 		}
 	}
-	p.CardsSet = msg.Cards
+	p.CardsSet = this.Int32ToCardsSet(msg.Cards)
 	//扣钱
 	this.ClearTimer()
 	var coins int64
@@ -930,7 +965,7 @@ func (this *Desk) GiveUp(p *Player, isOutTime bool, msg *protocol.GGiveUpRequect
 	this.SettleCoins += coins
 	p.win = -1 * coins
 	p.Coins -= coins
-	p.CardsSet = [][]int32{{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}}
+	p.CardsSet = make([]protocol.CardsSet, 13)
 	//添加记录
 	this.GameRecord.EndInfo = append(this.GameRecord.EndInfo, protocol.PlayerEndInfo{
 		Name:      p.name,
@@ -1192,7 +1227,11 @@ func (this *Desk) GameEnd(interface{}) {
 func (this *Desk) Int32ToGCard(str []int32) []GCard {
 	var tset []GCard
 	for _, v := range str {
-		tset = append(tset, GCard{Poker.CardBase{Card: v}})
+		card := GCard{Poker.CardBase{
+			Card: v,
+		}}
+		card.GetCardName()
+		tset = append(tset, card)
 	}
 	return tset
 }
@@ -1209,6 +1248,13 @@ func (this *Desk) CardsSetToInt32(cardsSet []protocol.CardsSet) [][]int32 {
 	var str [][]int32
 	for _, v := range cardsSet {
 		str = append(str, v.Cards)
+	}
+	return str
+}
+func (this *Desk) Int32ToCardsSet(cardsSet [][]int32) []protocol.CardsSet {
+	var str []protocol.CardsSet
+	for _, v := range cardsSet {
+		str = append(str, protocol.CardsSet{Cards: v})
 	}
 	return str
 }
@@ -1306,7 +1352,7 @@ func (this *Desk) OutCardRecord(p *Player) error {
 	}
 	var cards = [][]int32{{}, {}, {}, {}}
 	//排序
-	tGCard := append([]GCard{}, this.PublicCard...)
+	tGCard := append([]GCard{this.WildCard}, this.PublicCard...)
 	this.CardMgr.QuickSortCLV(tGCard)
 	//花色区分
 	for _, v := range tGCard {
@@ -1351,25 +1397,42 @@ func (this *Desk) GetGiveUpCoins(p *Player) (point int32, coins int64) {
 	return
 }
 
+//获取公摊牌
+func (this *Desk) GetPublicCard() GCard {
+	if len(this.PublicCard) > 0 {
+		return this.PublicCard[len(this.PublicCard)-1]
+	}
+	return GCard{CardBase: Poker.CardBase{Card: 0}}
+}
+
 //玩家退出
 func (this *Desk) ExitDesk(p *Player) bool {
 	if p.isJoin {
 		return false
 	}
-	delete(this.doingPlayers, p.seatPos)
-	delete(this.seatPlayers, p.seatPos)
-	for k := range this.players {
-		if this.players[k] == p {
-			if k < len(this.players) {
+	IsLevel := false
+	playerState := int32(0)
+	if this.gameState < GameStateSendCard || this.gameState == GameStateEnd || this.gameState == GameStateAbort || p.settle {
+		IsLevel = true
+	}
+	if IsLevel {
+		delete(this.doingPlayers, p.seatPos)
+		delete(this.seatPlayers, p.seatPos)
+		for k := range this.players {
+			if this.players[k] == p {
 				this.players = append(this.players[:k], this.players[k+1:]...)
+				break
 			}
-			this.players = this.players[:k]
-			break
 		}
+		playerState = PlayerStateLeave
+	} else {
+		p.disconnect = true
+		playerState = PlayerStateLixian
 	}
 	this.group.Leave(p.session)
-	this.group.Broadcast(NoticePlayerExit, &protocol.GPlayerExitNotice{
-		SeatId: p.seatPos,
+	this.group.Broadcast(NoticePlayerState, &protocol.PlayerStateNotice{
+		SeatId:      p.seatPos,
+		PlayerState: playerState,
 	})
 	return true
 }

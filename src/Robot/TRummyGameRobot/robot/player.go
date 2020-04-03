@@ -18,6 +18,10 @@ type Player struct {
 	HandCard []int32
 }
 
+func (this *Player) InitData() {
+
+}
+
 func (this *Player) InitPlayer() {
 	this.Connector.On(PushSendCard, this.SendCard)
 	this.Connector.On(NoticeGameState, this.GameState)

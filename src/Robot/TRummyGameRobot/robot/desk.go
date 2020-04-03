@@ -15,8 +15,22 @@ type Desk struct {
 	Players   []*Player
 }
 
-func NewDesk() {
+func NewDesk(p *Player, deskInfo protocol.DeskInfo, connector *io.Connector) (desk *Desk) {
+	desk = &Desk{
+		DeskInfo:  deskInfo,
+		Connector: connector,
+	}
 
+	for _, v := range deskInfo.PlayersInfo {
+		if v.SeatPos == deskInfo.UserSeatId {
+			desk.Players = append(desk.Players, p)
+		} else {
+			player := &Player{}
+			desk.Players = append(desk.Players, player)
+		}
+
+	}
+	return
 }
 
 //初始化监听

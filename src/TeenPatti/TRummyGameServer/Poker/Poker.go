@@ -45,17 +45,7 @@ func (this *MgrCard) InitNoKingCards() {
 	for _, v := range begaincard {
 		for j := 0; j < 13; j++ {
 			card := CardBase{Card: int32(v + j)}
-			switch card.GetCardColor() {
-			case 0:
-				card.Name += "方块"
-			case 1:
-				card.Name += "梅花"
-			case 2:
-				card.Name += "红桃"
-			case 3:
-				card.Name += "黑桃"
-			}
-			card.Name += strconv.Itoa(int(card.GetCardValue()))
+			card.GetCardName()
 			this.MVCard = append(this.MVCard, card)
 		}
 	}

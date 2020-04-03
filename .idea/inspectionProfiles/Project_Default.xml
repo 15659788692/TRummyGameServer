@@ -3,6 +3,7 @@
     <option name="myName" value="Project Default" />
     <inspection_tool class="GoNilness" enabled="false" level="WARNING" enabled_by_default="false" />
     <inspection_tool class="GoReceiverNames" enabled="false" level="WEAK WARNING" enabled_by_default="false" />
+    <inspection_tool class="GoSnakeCaseUsage" enabled="false" level="WEAK WARNING" enabled_by_default="false" />
     <inspection_tool class="GoStructTag" enabled="false" level="WARNING" enabled_by_default="false" />
     <inspection_tool class="GoUnhandledErrorResult" enabled="false" level="WARNING" enabled_by_default="false">
       <methods>
@@ -25,6 +26,7 @@
         <method importPath="github.com/lonng/nano" receiver="*Group" name="Multicast" />
       </methods>
     </inspection_tool>
+    <inspection_tool class="GoUnusedConst" enabled="false" level="WARNING" enabled_by_default="false" />
     <inspection_tool class="GoUnusedGlobalVariable" enabled="false" level="WARNING" enabled_by_default="false" />
     <inspection_tool class="SpellCheckingInspection" enabled="false" level="TYPO" enabled_by_default="false">
       <option name="processCode" value="true" />

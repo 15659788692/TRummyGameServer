@@ -1,40 +1,40 @@
 package db
 
-import "database/sql"
-
-//import (
-//	"database/sql"
-//	_ "github.com/go-sql-driver/mysql"
-//)
+import (
+	"TeenPatti/TRummyGameServer/conf"
+	"database/sql"
+	"fmt"
+	_ "github.com/go-sql-driver/mysql"
+	"time"
+)
 
 var DBCon *sql.DB
 
-//func init() {
-//	userName := conf.Conf.DB.USERNAME
-//	pwd := conf.Conf.DB.USERNAME
-//	net := conf.Conf.DB.NETWORK
-//	host := conf.Conf.DB.HOST
-//	port := conf.Conf.DB.PORT
-//	dbname := conf.Conf.DB.DBNAME
-//
-//	dsn := fmt.Sprintf("%s:%s@%s(%s:%d)/%s", userName, pwd, net, host, port, dbname)
-//	DB, err := sql.Open("mysql", dsn)
-//	if err != nil {
-//		panic(err)
-//	}
-//
-//	DB.SetConnMaxLifetime(100 * time.Second)
-//	DB.SetMaxOpenConns(100)
-//	DB.SetMaxIdleConns(16)
-//	DBCon = DB
-//
-//	if err1 := DB.Ping(); err1 != nil {
-//		fmt.Println(err1)
-//		panic(err1)
-//	}
-//
-//	fmt.Println("数据库连接成功 ")
-//}
+func init() {
+	userName := conf.Conf.DB.USERNAME
+	pwd := conf.Conf.DB.USERNAME
+	net := conf.Conf.DB.NETWORK
+	host := conf.Conf.DB.HOST
+	port := conf.Conf.DB.PORT
+	dbname := conf.Conf.DB.DBNAME
+
+	dsn := fmt.Sprintf("%s:%s@%s(%s:%d)/%s", userName, pwd, net, host, port, dbname)
+	DB, err := sql.Open("mysql", dsn)
+	if err != nil {
+		panic(err)
+	}
+	DB.SetConnMaxLifetime(100 * time.Second)
+	DB.SetMaxOpenConns(100)
+	DB.SetMaxIdleConns(16)
+	DBCon = DB
+
+	if err1 := DB.Ping(); err1 != nil {
+		fmt.Println(err1)
+		panic(err1)
+	}
+
+	fmt.Println("数据库连接成功 ")
+}
 
 ///*
 //Do:更新用户金币

@@ -1,8 +1,13 @@
 package game
 
 import (
+	"TeenPatti/TRummyGameServer/db"
 	"TeenPatti/TRummyGameServer/protocol"
+	"encoding/json"
+	"fmt"
+	"io/ioutil"
 	"math/rand"
+	"net/http"
 	"strconv"
 	"time"
 
@@ -85,27 +90,27 @@ func (m *TRManager) AfterInit() {
 }
 
 func (m *TRManager) Login(s *session.Session, req *protocol.LoginToGameServerRequest) error {
-	//
-	//IsLogin := CheckPlayerIsLoginFromRedis(strconv.Itoa(int(req.Uid)), req.Token)
-	//if !IsLogin {
-	//	return s.Response(&protocol.LoginToGameServerResponse{
-	//		Success: false,
-	//		Error:   "Token or UID is error！",
-	//	})
-	//}
-	////获取用户基础信息
-	//playMsg := GetPlayerMsgFromFaceBook(req.Token)
-	//fmt.Println(playMsg)
-	//if playMsg == nil {
-	//	return s.Response(&protocol.LoginToGameServerResponse{
-	//		Success: false,
-	//		Error:   "get user message failed!",
-	//	})
-	//}
 
+	IsLogin := CheckPlayerIsLoginFromRedis(strconv.Itoa(int(req.Uid)), req.Token)
+	if !IsLogin {
+		return s.Response(&protocol.LoginToGameServerResponse{
+			Success: false,
+			Error:   "Token or UID is error！",
+		})
+	}
+	//获取用户基础信息
+	playMsg := GetPlayerMsgFromFaceBook(req.Token)
+	fmt.Println(playMsg)
+	if playMsg == nil {
+		return s.Response(&protocol.LoginToGameServerResponse{
+			Success: false,
+			Error:   "get user message failed!",
+		})
+	}
+	fmt.Println("玩家的信息:", playMsg)
 	//需要去redis服务器读取 对应的帐号信息
 	var (
-		Name    string = "玩家" + strconv.Itoa(len(m.players))
+		Name    string = "玩家" + strconv.Itoa(int(req.Uid))
 		HeadUrl string = "main"
 		IP      string = s.RemoteAddr().String()
 	)
@@ -196,42 +201,42 @@ func (m *TRManager) offline(uid int64) {
 	log.Infof("玩家: %d从在线列表中删除, 剩余：%d", uid, len(m.players))
 }
 
-//func CheckPlayerIsLoginFromRedis(id string, token string) bool {
-//	val, err := db.RedisCon.Get(fmt.Sprintf("session:%v", id)).Result()
-//	if err != nil {
-//		fmt.Println("获取token错误")
-//		return false
-//	}
-//
-//	if token == val {
-//		return true
-//	}
-//
-//	fmt.Println("token不相等")
-//
-//	return false
-//}
-//
-////获取用户信息从facebook
-//func GetPlayerMsgFromFaceBook(token string) *protocol.FaceBookGetPlayerMsg {
-//	httpreq, err1 := http.NewRequest(http.MethodGet, GetPlayerMsgFromRedis, nil)
-//	if err1 != nil {
-//		fmt.Println("获取用户信息请求创建失败")
-//		return nil
-//	}
-//
-//	httpreq.Header.Set("Authorization", fmt.Sprintf("Bearer %v", token))
-//	resp, err2 := http.DefaultClient.Do(httpreq)
-//	if err2 != nil {
-//		fmt.Println("获取用户信息请求失败")
-//		return nil
-//	}
-//	defer resp.Body.Close()
-//
-//	respByte, _ := ioutil.ReadAll(resp.Body)
-//
-//	var data protocol.FaceBookGetPlayerMsgData
-//	_ = json.Unmarshal(respByte, &data)
-//
-//	return &data.Data
-//}
+func CheckPlayerIsLoginFromRedis(id string, token string) bool {
+	val, err := db.RedisCon.Get(fmt.Sprintf("session:%v", id)).Result()
+	if err != nil {
+		fmt.Println("获取token错误")
+		return false
+	}
+
+	if token == val {
+		return true
+	}
+
+	fmt.Println("token不相等")
+
+	return false
+}
+
+//获取用户信息从facebook
+func GetPlayerMsgFromFaceBook(token string) *protocol.FaceBookGetPlayerMsg {
+	httpreq, err1 := http.NewRequest(http.MethodGet, GetPlayerMsgFromRedis, nil)
+	if err1 != nil {
+		fmt.Println("获取用户信息请求创建失败！")
+		return nil
+	}
+
+	httpreq.Header.Set("Authorization", fmt.Sprintf("Bearer %v", token))
+	resp, err2 := http.DefaultClient.Do(httpreq)
+	if err2 != nil {
+		fmt.Println("获取用户信息请求失败")
+		return nil
+	}
+	defer resp.Body.Close()
+
+	respByte, _ := ioutil.ReadAll(resp.Body)
+
+	var data protocol.FaceBookGetPlayerMsgData
+	_ = json.Unmarshal(respByte, &data)
+
+	return &data.Data
+}

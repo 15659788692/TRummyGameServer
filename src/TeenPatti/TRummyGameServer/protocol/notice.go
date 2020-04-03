@@ -2,7 +2,7 @@ package protocol
 
 //某玩家进入桌子信息
 type EnterDeskInfo struct {
-	SeatPos  int    `json:"seatPos"`  //玩家的坐位
+	SeatPos  int32  `json:"seatPos"`  //玩家的坐位
 	Nickname string `json:"nickname"` //玩家的名称
 	Sex      int    `json:"sex"`      //性别
 	HeadUrl  string `json:"headURL"`  //图标
@@ -11,9 +11,8 @@ type EnterDeskInfo struct {
 	IsBanker bool   `json:"isBanker"` //是否是庄家
 	IsKing   bool   `json:"isKing`    //是否是房主
 	Sitdown  bool   `json:"sitdown"`  //是否坐下
-	Betting  bool   `json:"betting"`  //当前是否投注中
-	Packed   bool   `json:"Packed"`   //界面上三个按钮的状态
-	Show     bool   `json:"Show"`     //是示请求SHOW的按钮状态
+	LiXian   bool   `json:"liXian"`   //是否离线
+	Show     bool   `json:"Show"`     //是否showed
 	Coins    int64  `json:"coins"`    //玩家的金额
 }
 
@@ -86,11 +85,14 @@ type GEndForm struct {
 type PlayerEndInfo struct {
 	Name      string
 	Head      string
-	CardsSets [][]int32
+	CardsSets []CardsSet
 	Point     int32
 	Coins     int64
 }
 
-type GPlayerExitNotice struct {
-	SeatId int32 //	玩家座位号
+//广播玩家状态
+type PlayerStateNotice struct {
+	SeatId      int32
+	PlayerState int32 //1.加入房间 2.离开(空) 3.重连 4.掉线(空) 5.坐下 6.起立(空) 部分玩家信息为空
+	PlayerInfo  EnterDeskInfo
 }

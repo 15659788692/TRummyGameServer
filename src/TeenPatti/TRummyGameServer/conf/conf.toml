@@ -1,10 +1,10 @@
 title = "TOML CONF"
 [server]
-    ip = "http://192.168.0.104:8080"
+    ip = "http://192.168.0.141:3000"
     port = 3000
 [desk]
     #游戏状态时间：0.等待玩家加入1.游戏开始倒计时2.发牌3.每个玩家操作时间4.结算时间5.结束动画6.游戏终止动画
-    GameStateTime = [0,7,9,30,20,10,10]
+    GameStateTime = [0,7,9,10,20,10,6]
 
     DeskFullplayerNum   = 2  #桌子的满玩家数量
     DeskMinplayerNum    = 2  #开始游戏的最小人数
@@ -16,13 +16,13 @@ title = "TOML CONF"
     WildCard = 0
 
 [redis]
-    redisAddr      = "192.168.0.152:6379"
+    redisAddr      = "192.168.0.104:6379"
     redisPassword  = ""
     redisDB        = 1
 
 #数据库
 [db]
-    host     = "192.168.0.152"
+    host     = "192.168.0.104"
     post     = 3306
     dbName   = "user-center"
     userName = "user-center"

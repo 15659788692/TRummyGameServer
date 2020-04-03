@@ -288,11 +288,7 @@ func (this *GMgrCard) CheckoutHu(cards [][]GCard, WildCard GCard) (bool, int64) 
 	Is1stlife := false
 	for k, v := range tCards {
 		if this.Is1stLife(v) {
-			if len(tCards) > k+1 {
-				tCards = append(tCards[:k], tCards[k+1:]...)
-			} else {
-				tCards = tCards[:k]
-			}
+			tCards = append(tCards[:k], tCards[k+1:]...)
 			Is1stlife = true
 			break
 		}
@@ -304,16 +300,15 @@ func (this *GMgrCard) CheckoutHu(cards [][]GCard, WildCard GCard) (bool, int64) 
 		}
 		return false, point
 	}
+	if len(tCards) == 0 {
+		return true, 0
+	}
 	fmt.Println("检测牌组：", tCards)
 	//检测2st life
 	Is2stlife := false
 	for k, v := range tCards {
 		if this.Is2stLife(v, WildCard) {
-			if len(tCards) > k+1 {
-				tCards = append(tCards[:k], tCards[k+1:]...)
-			} else {
-				tCards = tCards[:k]
-			}
+			tCards = append(tCards[:k], tCards[k+1:]...)
 			Is2stlife = true
 			break
 		}
@@ -326,17 +321,18 @@ func (this *GMgrCard) CheckoutHu(cards [][]GCard, WildCard GCard) (bool, int64) 
 		}
 		return false, point
 	}
+	if len(tCards) == 0 {
+		return true, 0
+	}
 	fmt.Println("检测牌组：", tCards)
 	//检测其他牌组是否成型
 	var falsecard [][]GCard
 	for _, v := range tCards {
 		if !this.Is2stLife(v, WildCard) && !this.IsSetLife(v, WildCard) {
 			falsecard = append(falsecard, v)
-
 		}
 	}
 	if len(falsecard) > 0 {
-
 		point := this.ComputePoint(falsecard, WildCard, Is1stlife)
 		if point > int64(conf.Conf.Desk.MaxLosePoint) {
 			point = int64(conf.Conf.Desk.MaxLosePoint)

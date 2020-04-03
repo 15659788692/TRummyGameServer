@@ -1,5 +1,7 @@
 package Poker
 
+import "strconv"
+
 const (
 	CARD_COLOR   = 0xF0 //花色掩码
 	CARD_VALUE   = 0x0F //数值掩码
@@ -110,5 +112,23 @@ func (this *CardBase) GetCardColor() int32 {
 }
 
 func (this *CardBase) GetCardValue() int32 {
-	return (this.Card & CARD_VALUE)
+	return this.Card & CARD_VALUE
+}
+
+func (this *CardBase) GetCardName() string {
+	if this.Name != "" {
+		return this.Name
+	}
+	switch this.GetCardColor() {
+	case CARD_COLOR_Fang:
+		this.Name += "方块"
+	case CARD_COLOR_Mei:
+		this.Name += "梅花"
+	case CARD_COLOR_Hong:
+		this.Name += "红桃"
+	case CARD_COLOR_Hei:
+		this.Name += "黑桃"
+	}
+	this.Name += strconv.Itoa(int(this.GetCardValue()))
+	return this.Name
 }

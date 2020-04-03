@@ -1,6 +1,7 @@
 package game
 
 import (
+	"TeenPatti/TRummyGameServer/protocol"
 	"github.com/lonng/nano/session"
 	log "github.com/sirupsen/logrus"
 	"math/rand"
@@ -10,6 +11,15 @@ type Loser struct {
 	uid   int64
 	score int
 }
+
+const (
+	PlayerStateJoin    = 1
+	PlayerStateLeave   = 2
+	PlayerStateReJoin  = 3
+	PlayerStateLixian  = 4
+	PlayerStateSitDown = 5
+	PlayerStateStandUp = 6
+)
 
 type Player struct {
 	uid        int64  // 用户ID
@@ -35,7 +45,7 @@ type Player struct {
 	settle    bool  //是否结算
 	showed    bool  //是否已show
 	HandCards []GCard
-	CardsSet  [][]int32
+	CardsSet  []protocol.CardsSet
 	Timeout   int32 //连续超时次数
 	Point     int32 //点数
 	IsKing    bool
@@ -58,7 +68,7 @@ func newPlayer(s *session.Session, uid int64, nicename, head, ip string, sex int
 		settle:     false,
 		logger:     log.WithField("player", uid),
 		Point:      0,
-		CardsSet:   [][]int32{},
+		CardsSet:   []protocol.CardsSet{},
 	}
 	p.IsKing = false
 	p.Coins = rand.Int63()%500000 + 10000
@@ -76,7 +86,7 @@ func (p *Player) InitPlayer() {
 	p.settle = false
 	p.showed = false
 	p.HandCards = []GCard{}
-	p.CardsSet = [][]int32{}
+	p.CardsSet = []protocol.CardsSet{}
 	p.Timeout = 0
 	p.Point = 0
 }
