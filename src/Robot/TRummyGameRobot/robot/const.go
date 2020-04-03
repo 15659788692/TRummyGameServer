@@ -24,7 +24,14 @@ const (
 )
 
 //请求
-const ()
+const (
+	ReqLogin        = "TRManager.Login"
+	ReqDeskJoinDesk = "TRDeskManager.JoinDesk"
+	ReqDeskOperCard = "TRDeskManager.OperCard"
+	ReqDeskShowCard = "TRDeskManager.ShowCard"
+	ReqDeskSettle   = "TRDeskManager.Settle"
+	ReqDeskGiveUp   = "TRDeskManager.GiveUp"
+)
 
 const ( //游戏状态
 	GameStateWaitJoin  = 0

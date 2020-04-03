@@ -68,7 +68,7 @@ func (this *Client) LoginRequest() {
 	loginServer.Version = "Version1.0"
 	loginServer.Token = "1234"
 	loginServer.Uid = 12234344 + int64(time.Now().Second()%100)
-	this.Connector.Request("TRManager.Login", loginServer, this.LoginResponse)
+	this.Connector.Request(ReqLogin, loginServer, this.LoginResponse)
 }
 
 //收到登录回复
@@ -95,7 +95,7 @@ func (this *Client) JionDeskRequest() {
 	Req := protocol.JoinDeskRequest{}
 	Req.NickName = this.MyPlayer.Nickname
 	Req.Uid = this.MyPlayer.Uid
-	this.Connector.Request("TRDeskManager.JoinDesk", Req, this.JionDeskResponse)
+	this.Connector.Request(ReqDeskJoinDesk, Req, this.JionDeskResponse)
 }
 
 //加入桌子回复

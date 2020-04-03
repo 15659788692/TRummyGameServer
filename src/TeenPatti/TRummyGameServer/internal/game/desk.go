@@ -965,7 +965,11 @@ func (this *Desk) GiveUp(p *Player, isOutTime bool, msg *protocol.GGiveUpRequect
 	this.SettleCoins += coins
 	p.win = -1 * coins
 	p.Coins -= coins
-	p.CardsSet = make([]protocol.CardsSet, 13)
+	p.CardsSet = []protocol.CardsSet{{
+		Cards: make([]int32, 13),
+		Type:  0,
+		Point: p.Point,
+	}}
 	//添加记录
 	this.GameRecord.EndInfo = append(this.GameRecord.EndInfo, protocol.PlayerEndInfo{
 		Name:      p.name,

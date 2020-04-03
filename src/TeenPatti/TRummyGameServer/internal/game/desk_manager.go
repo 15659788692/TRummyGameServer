@@ -53,6 +53,7 @@ func (this *TRDeskManager) AfterInit() {
 		p, _ := this.checkSessionAuther(s)
 		if p.isJoin {
 			p.disconnect = true
+			p.desk.ExitDesk(p)
 		} else { //退出
 			desk := p.desk
 			desk.Mutex.Lock()

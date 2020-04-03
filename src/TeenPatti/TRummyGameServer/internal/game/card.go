@@ -3,7 +3,6 @@ package game
 import (
 	"TeenPatti/TRummyGameServer/Poker"
 	"TeenPatti/TRummyGameServer/conf"
-	"fmt"
 )
 
 //组牌的类型
@@ -73,9 +72,7 @@ func (this *GMgrCard) Is1stLife(cards1st []GCard) bool {
 		}
 	}
 	//按A最大2最小排序
-	fmt.Println("排序前的牌：", cards1st)
 	this.QuickSortLV(cards1st)
-	fmt.Println("排序后的牌：", cards1st)
 	//检测同花顺子
 	isTrue := true
 	for k, v := range cards1st {
@@ -283,7 +280,6 @@ func (this *GMgrCard) QuickSortCLV(values []GCard) {
 //检测是否胡牌
 func (this *GMgrCard) CheckoutHu(cards [][]GCard, WildCard GCard) (bool, int64) {
 	tCards := append([][]GCard{}, cards...)
-	fmt.Println("检测牌组：", tCards)
 	//检测1st life
 	Is1stlife := false
 	for k, v := range tCards {
@@ -303,7 +299,6 @@ func (this *GMgrCard) CheckoutHu(cards [][]GCard, WildCard GCard) (bool, int64) 
 	if len(tCards) == 0 {
 		return true, 0
 	}
-	fmt.Println("检测牌组：", tCards)
 	//检测2st life
 	Is2stlife := false
 	for k, v := range tCards {
@@ -313,7 +308,6 @@ func (this *GMgrCard) CheckoutHu(cards [][]GCard, WildCard GCard) (bool, int64) 
 			break
 		}
 	}
-	fmt.Println("检测牌组：", tCards)
 	if !Is2stlife {
 		point := this.ComputePoint(tCards, WildCard, Is1stlife)
 		if point > int64(conf.Conf.Desk.MaxLosePoint) {
@@ -324,7 +318,6 @@ func (this *GMgrCard) CheckoutHu(cards [][]GCard, WildCard GCard) (bool, int64) 
 	if len(tCards) == 0 {
 		return true, 0
 	}
-	fmt.Println("检测牌组：", tCards)
 	//检测其他牌组是否成型
 	var falsecard [][]GCard
 	for _, v := range tCards {
