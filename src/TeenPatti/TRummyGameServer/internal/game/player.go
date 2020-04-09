@@ -3,7 +3,6 @@ package game
 import (
 	"TeenPatti/TRummyGameServer/protocol"
 	"github.com/lonng/nano/session"
-	log "github.com/sirupsen/logrus"
 	"math/rand"
 )
 
@@ -37,7 +36,6 @@ type Player struct {
 
 	session *session.Session //玩家对应的网络通道
 	desk    *Desk            //玩家的桌子
-	logger  *log.Entry       //日志文件
 
 	win       int64 //在此桌的胜负
 	isBanker  bool  //是否是庄家
@@ -66,7 +64,6 @@ func newPlayer(s *session.Session, uid int64, nicename, head, ip string, sex int
 		deposit:    false,
 		Timeout:    0,
 		settle:     false,
-		logger:     log.WithField("player", uid),
 		Point:      0,
 		CardsSet:   []protocol.CardsSet{},
 	}
@@ -103,16 +100,13 @@ func (p *Player) removeSession() {
 	p.session = nil
 }
 
-func (p *Player) setDesk(d *Desk, turn int32) {
+func (p *Player) setDesk(d *Desk) {
 
 	if d == nil {
-		p.logger.Error("桌号为空")
 		return
 	}
 
 	p.desk = d
-	p.seatPos = turn
-	p.logger = log.WithFields(log.Fields{"deskno": p.desk.roomNo, "player": p.uid})
 
 }
 

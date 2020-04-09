@@ -49,6 +49,7 @@ type GPlayerOperNotice struct {
 	Opertion   int32 //摸牌操作	1.摸公摊牌   2.摸牌堆里的牌   3.出牌到牌堆   4.出牌到Show
 	OperCard   int32 //操作的牌	如果Opertion是2，则OperCard为 0，
 	PublicCard int32 //公摊牌	公摊牌的变化
+	ShowCard   int32
 	CardsNum   int32 //牌堆剩余张数
 }
 

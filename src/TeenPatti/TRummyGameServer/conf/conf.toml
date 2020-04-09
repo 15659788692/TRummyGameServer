@@ -1,10 +1,10 @@
 title = "TOML CONF"
 [server]
-    ip = "http://192.168.0.141:3000"
+    ip = "http://192.168.0.104:8080"
     port = 3000
 [desk]
     #游戏状态时间：0.等待玩家加入1.游戏开始倒计时2.发牌3.每个玩家操作时间4.结算时间5.结束动画6.游戏终止动画
-    GameStateTime = [0,7,9,10,20,10,6]
+    GameStateTime = [0,20,9,30,20,10,6]
 
     DeskFullplayerNum   = 2  #桌子的满玩家数量
     DeskMinplayerNum    = 2  #开始游戏的最小人数

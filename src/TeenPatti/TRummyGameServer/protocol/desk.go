@@ -2,23 +2,24 @@ package protocol
 
 //玩家加入后桌面的详细信息
 type DeskInfo struct {
-	PointValue    int64           `json:"pointValue"`    //点值，底注的意思，输一点代表80分
-	DecksNum      int32           `json:"decksNum"`      //几副牌
-	MaxWining     int64           `json:"maxWining"`     //最多赢多少分
-	Maxlosing     int64           `json:"maxlosing"`     //最多输多少分
-	SettleCoins   int64           `json:"settleCoins"`   //结算区金额
-	GameState     int32           `json:"gameState"`     //游戏状态
-	GameStateTime int32           `json:"gameStateTime"` //游戏状态时间
-	WildCard      int32           `json:"wildCard"`      //万能牌
-	ShowCard      int32           `json:"showCard"`      //show区的牌
-	PublicCard    int32           `json:"publicCard"`    //公摊牌	公摊牌的变化
-	CardsNum      int32           `json:"cardsNum"`      //牌堆剩余张数
-	OperSeatId    int32           `json:"operSeatId"`    //当前操作的玩家座位号
-	BankerSeatId  int32           `json:"bankerSeatId"`  //庄家的座位号
-	KingSeatId    int32           `json:"kingSeatId"`    //房主的座位号
-	FirstSeatId   int32           `json:"firstSeatId"`   //首出玩家的座位号
-	UserSeatId    int32           `json:"userSeatId"`    //玩家自己的座位号
-	PlayersInfo   []EnterDeskInfo `json:"playersInfo"`   //所有玩家的详细信息
+	PointValue     int64           `json:"pointValue"`     //点值，底注的意思，输一点代表80分
+	DecksNum       int32           `json:"decksNum"`       //几副牌
+	MaxWining      int64           `json:"maxWining"`      //最多赢多少分
+	Maxlosing      int64           `json:"maxlosing"`      //最多输多少分
+	SettleCoins    int64           `json:"settleCoins"`    //结算区金额
+	GameState      int32           `json:"gameState"`      //游戏状态
+	GameStateTime  int32           `json:"gameStateTime"`  //游戏状态时间
+	TotalStateTime int32           `json:"totalStateTime"` //状态总时间
+	WildCard       int32           `json:"wildCard"`       //万能牌
+	ShowCard       int32           `json:"showCard"`       //show区的牌
+	PublicCard     int32           `json:"publicCard"`     //公摊牌	公摊牌的变化
+	CardsNum       int32           `json:"cardsNum"`       //牌堆剩余张数
+	OperSeatId     int32           `json:"operSeatId"`     //当前操作的玩家座位号
+	BankerSeatId   int32           `json:"bankerSeatId"`   //庄家的座位号
+	KingSeatId     int32           `json:"kingSeatId"`     //房主的座位号
+	FirstSeatId    int32           `json:"firstSeatId"`    //首出玩家的座位号
+	UserSeatId     int32           `json:"userSeatId"`     //玩家自己的座位号
+	PlayersInfo    []EnterDeskInfo `json:"playersInfo"`    //所有玩家的详细信息
 }
 
 type ExitRequest struct {

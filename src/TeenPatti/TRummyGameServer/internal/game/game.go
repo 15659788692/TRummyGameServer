@@ -2,7 +2,6 @@ package game
 
 import (
 	"fmt"
-
 	"math/rand"
 	"net/http"
 
@@ -11,7 +10,6 @@ import (
 	"github.com/lonng/nano"
 	"github.com/lonng/nano/component"
 	"github.com/lonng/nano/serialize/json"
-	log "github.com/sirupsen/logrus"
 )
 import "TeenPatti/TRummyGameServer/conf"
 

@@ -1,7 +1,6 @@
 package game
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/lonng/nano/component"
@@ -64,14 +63,7 @@ func (this *TRDeskManager) AfterInit() {
 			desk.Mutex.Unlock()
 			p.ExitDesk()
 		}
-
-		// Fixed: 玩家WIFI切换到4G网络不断开, 重连时，将UID设置为illegalSessionUid
-		if s.UID() > 0 {
-
-			if err := this.onPlayerDisconnect(s); err != nil {
-				logger.Errorf("玩家退出: UID=%d, Error=%s", s.UID, err.Error())
-			}
-		}
+		log.Println("玩家断线！", p)
 	})
 
 	// 每5分钟清空一次已摧毁的房间信息
@@ -147,7 +139,10 @@ func (this *TRDeskManager) setDesk(number room.Number, desk *Desk) {
 }
 
 //读取没有满人的桌子
-func (this *TRDeskManager) getJoinDesk() *Desk {
+func (this *TRDeskManager) getJoinDesk(p *Player) *Desk {
+	if p.desk != nil {
+		return p.desk
+	}
 
 	for _, desk := range this.desks {
 
@@ -214,9 +209,12 @@ func (this *TRDeskManager) JoinDesk(s *session.Session, data *protocol.JoinDeskR
 
 		return s.Response(deskNotAutherSession)
 	}
-
+	isReJoin := false
+	if p.desk != nil {
+		isReJoin = true
+	}
 	//得到可加入的桌子
-	desk := this.getJoinDesk()
+	desk := this.getJoinDesk(p)
 
 	//若全部桌子都满人了，则建立桌子
 	if desk == nil {
@@ -228,23 +226,21 @@ func (this *TRDeskManager) JoinDesk(s *session.Session, data *protocol.JoinDeskR
 		//设定桌子
 		this.setDesk(roomNo, desk)
 
-	} else {
-
 	}
 
 	//玩家加入桌子
-	if err := desk.playerJoin(s, false); err != nil {
+	if err := desk.playerJoin(s, isReJoin); err != nil {
 
-		desk.logger.Errorf("玩家加入房间失败，UID=%d, Error=%s", s.UID(), err.Error())
+		log.Errorf("玩家加入房间失败，UID=%d, Error=%s", s.UID(), err.Error())
 	} else {
 		this.playersDesk[s] = desk
 	}
 
 	//desk.logger.Println("ResponeJoinDesk.........................")
-	fmt.Println(p.name, "加入房间！")
+	log.Println(p.name, "加入房间！")
 	desk.Mutex.Lock()
 	defer desk.Mutex.Unlock()
-	return desk.PlayerJoinAfterInfo(p)
+	return desk.PlayerJoinAfterInfo(p, isReJoin)
 }
 
 ////退出桌子
@@ -354,7 +350,7 @@ func (this *TRDeskManager) GiveUp(s *session.Session, msg *protocol.GGiveUpReque
 			Success: false,
 		})
 	}
-	fmt.Println("玩家请求弃牌！")
+	log.Println("玩家请求弃牌！")
 	p.desk.Mutex.Lock()
 	defer p.desk.Mutex.Unlock()
 	return p.desk.GiveUp(p, false, msg)

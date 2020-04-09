@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"math/rand"
 	"net/http"
 	"strconv"
 	"time"
@@ -15,7 +14,6 @@ import (
 	"github.com/lonng/nano/component"
 	"github.com/lonng/nano/scheduler"
 	"github.com/lonng/nano/session"
-	log "github.com/sirupsen/logrus"
 )
 
 const kickResetBacklog = 8
@@ -100,40 +98,30 @@ func (m *TRManager) Login(s *session.Session, req *protocol.LoginToGameServerReq
 	}
 	//获取用户基础信息
 	playMsg := GetPlayerMsgFromFaceBook(req.Token)
-	fmt.Println(playMsg)
+	log.Println(playMsg)
 	if playMsg == nil {
 		return s.Response(&protocol.LoginToGameServerResponse{
 			Success: false,
 			Error:   "get user message failed!",
 		})
 	}
-	fmt.Println("玩家的信息:", playMsg)
-	//需要去redis服务器读取 对应的帐号信息
-	var (
-		Name    string = "玩家" + strconv.Itoa(int(req.Uid))
-		HeadUrl string = "main"
-		IP      string = s.RemoteAddr().String()
-	)
+	log.Println("玩家的信息:", playMsg)
 
 	logger.Println("Login:Uid:  Id", s.UID(), s.ID())
-
 	//回复登陆情况
 	resp := &protocol.LoginToGameServerResponse{
 		Success:  true,
-		Uid:      s.UID(),
-		Nickname: Name,
+		Uid:      req.Uid,
+		Nickname: playMsg.Name,
 		Sex:      1,
-		HeadUrl:  HeadUrl,
+		HeadUrl:  playMsg.Avatar,
 	}
 
 	//在此检测版本号
 	if req.Version != "Version1.0" {
-
 		logger.Println("version is too old:", req.Version)
-
 		resp.Success = false
 		resp.Error = versionUpdateMessage
-
 		return s.Response(resp)
 	}
 
@@ -145,7 +133,7 @@ func (m *TRManager) Login(s *session.Session, req *protocol.LoginToGameServerReq
 
 		log.Println("bind error:", uid, err)
 
-		uid = int64(rand.Uint32()) //由服务器产生uid的随机数，到时从redis得到
+		uid = req.Uid //由服务器产生uid的随机数，到时从redis得到
 	}
 
 	resp.Uid = uid
@@ -154,7 +142,7 @@ func (m *TRManager) Login(s *session.Session, req *protocol.LoginToGameServerReq
 
 		log.Infof("玩家: %d不在线，创建新的玩家 :", uid)
 
-		p = newPlayer(s, uid, Name, HeadUrl, IP, 1)
+		p = newPlayer(s, uid, playMsg.Name, playMsg.Avatar, "IP", 1)
 
 		m.setPlayer(uid, p)
 
@@ -204,7 +192,7 @@ func (m *TRManager) offline(uid int64) {
 func CheckPlayerIsLoginFromRedis(id string, token string) bool {
 	val, err := db.RedisCon.Get(fmt.Sprintf("session:%v", id)).Result()
 	if err != nil {
-		fmt.Println("获取token错误")
+		log.Println("获取token错误")
 		return false
 	}
 
@@ -212,7 +200,8 @@ func CheckPlayerIsLoginFromRedis(id string, token string) bool {
 		return true
 	}
 
-	fmt.Println("token不相等")
+	log.Println("token不相等", token)
+	log.Println(val)
 
 	return false
 }
@@ -221,14 +210,14 @@ func CheckPlayerIsLoginFromRedis(id string, token string) bool {
 func GetPlayerMsgFromFaceBook(token string) *protocol.FaceBookGetPlayerMsg {
 	httpreq, err1 := http.NewRequest(http.MethodGet, GetPlayerMsgFromRedis, nil)
 	if err1 != nil {
-		fmt.Println("获取用户信息请求创建失败！")
+		log.Println("获取用户信息请求创建失败！")
 		return nil
 	}
 
 	httpreq.Header.Set("Authorization", fmt.Sprintf("Bearer %v", token))
 	resp, err2 := http.DefaultClient.Do(httpreq)
-	if err2 != nil {
-		fmt.Println("获取用户信息请求失败")
+	if err2 != nil && resp.StatusCode == 200 {
+		log.Println("获取用户信息请求失败", err2)
 		return nil
 	}
 	defer resp.Body.Close()
@@ -237,6 +226,9 @@ func GetPlayerMsgFromFaceBook(token string) *protocol.FaceBookGetPlayerMsg {
 
 	var data protocol.FaceBookGetPlayerMsgData
 	_ = json.Unmarshal(respByte, &data)
+	if data.Code != 0 {
+		return nil
+	}
 
 	return &data.Data
 }
