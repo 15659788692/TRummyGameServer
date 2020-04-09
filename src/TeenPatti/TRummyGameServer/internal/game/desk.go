@@ -1,6 +1,8 @@
 package game
 
-import "TeenPatti/TRummyGameServer/conf"
+import (
+	"TeenPatti/TRummyGameServer/conf"
+)
 
 import (
 	"TeenPatti/TRummyGameServer/Poker"
@@ -273,6 +275,8 @@ func (d *Desk) GetDeskInfo(p *Player) protocol.DeskInfo {
 		KingSeatId:     d.KingId,
 		FirstSeatId:    d.FristOutId,
 		UserSeatId:     p.seatPos,
+		HandCard:       p.CardsSet,
+		WinPlayerId:    d.WinPlayerId,
 	}
 	for _, v := range d.seatPlayers {
 		deskInfo.PlayersInfo = append(deskInfo.PlayersInfo, protocol.EnterDeskInfo{
@@ -286,6 +290,7 @@ func (d *Desk) GetDeskInfo(p *Player) protocol.DeskInfo {
 			LiXian:   v.disconnect,
 			IsKing:   v.IsKing,
 			Show:     v.showed,
+			IsSettle: v.settle,
 			Coins:    v.Coins,
 		})
 	}
@@ -338,6 +343,7 @@ func (this *Desk) start(interface{}) {
 				tcard = v
 			}
 		}
+		p.CardsSet = append(p.CardsSet, protocol.CardsSet{Cards: this.GCardToInt32(p.HandCards[t:len(p.HandCards)])})
 		log.Println(p.name, p.GetHandCardsString())
 	}
 	//定庄
@@ -929,6 +935,8 @@ func (this *Desk) Settle(p *Player, msg *protocol.GSettleRequect, isOutTime bool
 		Point:     0,
 		Coins:     winPlayer.win,
 	}}, this.GameRecord.EndInfo...)
+	winPlayer.settle = true
+	winPlayer.isJoin = false
 	log.Println("玩家的结算信息：", this.GameRecord.EndInfo)
 	this.gameState = GameStateStettleAV
 	this.ClearTimer()
@@ -1043,10 +1051,11 @@ func (this *Desk) GiveUp(p *Player, isOutTime bool, msg *protocol.GGiveUpRequect
 	p.isJoin = false
 	delete(this.doingPlayers, p.seatPos)
 	//如果是轮到自己操作的时候放弃，那么切换下一个玩家
+	nextplayer := int32(-1)
 	if this.OperateId == p.seatPos {
 		//轮到下一位玩家
 		for i := 1; i < this.Config.FullPlayerNum; i++ {
-			nextplayer := (this.OperateId + int32(i)) % int32(this.Config.FullPlayerNum)
+			nextplayer = (this.OperateId + int32(i)) % int32(this.Config.FullPlayerNum)
 			if this.doingPlayers[nextplayer] != nil {
 				this.OperateId = nextplayer
 				break
@@ -1225,6 +1234,8 @@ func (this *Desk) AddPlayerToDesk(p *Player) bool {
 		this.KingId = p.seatPos
 		this.BankerId = p.seatPos
 	}
+	p.disconnect = false
+	p.deposit = false
 	return true
 }
 

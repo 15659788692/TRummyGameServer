@@ -5,6 +5,7 @@ import (
 	"Robot/TRummyGameRobot/protocol"
 	"encoding/json"
 	"fmt"
+	"github.com/go-redis/redis"
 	"time"
 )
 
@@ -64,6 +65,16 @@ func (this *Client) Run() {
 
 //登录
 func (this *Client) LoginRequest() {
+	var redis = redis.NewClient(&redis.Options{
+		Addr:     "192.168.0.104:6379",
+		Password: "",
+		DB:       1,
+	})
+	_, err := redis.Ping().Result()
+	if err != nil {
+		panic("redis连接失败")
+	}
+	redis.Get(redis)
 	loginServer := &protocol.LoginToGameServerRequest{}
 	loginServer.Version = "Version1.0"
 	loginServer.Token = "1234"

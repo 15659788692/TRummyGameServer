@@ -12,7 +12,8 @@ type EnterDeskInfo struct {
 	IsKing   bool   `json:"isKing`    //是否是房主
 	Sitdown  bool   `json:"sitdown"`  //是否坐下
 	LiXian   bool   `json:"liXian"`   //是否离线
-	Show     bool   `json:"Show"`     //是否showed
+	Show     bool   `json:"show"`     //是否showed
+	IsSettle bool   `json:"isSettle"` //是否结算完
 	Coins    int64  `json:"coins"`    //玩家的金额
 }
 

@@ -29,7 +29,9 @@ func (this *Desk) DoTimer() {
 		}
 		this.TList = nlist
 		for _, v := range olist {
+			this.Mutex.Lock()
 			go v.H(v.D)
+			this.Mutex.Unlock()
 		}
 		time.Sleep(time.Duration(1) * time.Second)
 	}

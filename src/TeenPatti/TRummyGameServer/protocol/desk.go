@@ -19,6 +19,8 @@ type DeskInfo struct {
 	KingSeatId     int32           `json:"kingSeatId"`     //房主的座位号
 	FirstSeatId    int32           `json:"firstSeatId"`    //首出玩家的座位号
 	UserSeatId     int32           `json:"userSeatId"`     //玩家自己的座位号
+	WinPlayerId    int32           `json:"winPlayerId"`    //赢家座位号
+	HandCard       []CardsSet      `json:"handCard"`       //玩家手牌
 	PlayersInfo    []EnterDeskInfo `json:"playersInfo"`    //所有玩家的详细信息
 }
 

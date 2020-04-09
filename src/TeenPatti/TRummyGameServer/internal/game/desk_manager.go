@@ -146,7 +146,7 @@ func (this *TRDeskManager) getJoinDesk(p *Player) *Desk {
 
 	for _, desk := range this.desks {
 
-		if desk.IsFullPlayer() == false {
+		if desk.IsFullPlayer() == false && desk.gameState <= GameStateWaitStart {
 			return desk
 		}
 	}
@@ -200,6 +200,7 @@ func (this *TRDeskManager) checkSessionAuther(s *session.Session) (*Player, erro
 
 //进入桌子
 func (this *TRDeskManager) JoinDesk(s *session.Session, data *protocol.JoinDeskRequest) error {
+	logger.Println("收到加入桌子请求", data)
 	//检测消息
 	p, err := this.checkSessionAuther(s)
 
@@ -264,6 +265,7 @@ func (this *TRDeskManager) SitdownPush(s *session.Session) error {
 //游戏部分
 //玩家操作牌
 func (this *TRDeskManager) OperCard(s *session.Session, msg *protocol.GOperCardRequest) error {
+	logger.Println("收到操作请求", msg)
 	//检测消息
 	p, err := this.checkSessionAuther(s)
 	if err != nil {
@@ -288,6 +290,7 @@ func (this *TRDeskManager) OperCard(s *session.Session, msg *protocol.GOperCardR
 
 //show请求
 func (this *TRDeskManager) ShowCard(s *session.Session, msg *protocol.GSetHandCardRequest) error {
+	logger.Println("收到组牌请求", msg)
 	//检测消息
 	p, err := this.checkSessionAuther(s)
 	if err != nil {
@@ -311,6 +314,7 @@ func (this *TRDeskManager) ShowCard(s *session.Session, msg *protocol.GSetHandCa
 }
 
 func (this *TRDeskManager) Settle(s *session.Session, msg *protocol.GSettleRequect) error {
+	logger.Println("收到结算请求", msg)
 	//检测消息
 	p, err := this.checkSessionAuther(s)
 	if err != nil {
@@ -335,6 +339,7 @@ func (this *TRDeskManager) Settle(s *session.Session, msg *protocol.GSettleReque
 
 //放弃
 func (this *TRDeskManager) GiveUp(s *session.Session, msg *protocol.GGiveUpRequect) error {
+	logger.Println("收到放弃请求", msg)
 	//检测消息
 	p, err := this.checkSessionAuther(s)
 	if err != nil {
@@ -358,6 +363,7 @@ func (this *TRDeskManager) GiveUp(s *session.Session, msg *protocol.GGiveUpReque
 
 //请求出牌记录
 func (this *TRDeskManager) OutCardRecord(s *session.Session, msg *protocol.GOutCardRecordRequect) error {
+	logger.Println("收到出牌记录请求", msg)
 	//检测消息
 	p, err := this.checkSessionAuther(s)
 	if err != nil {
