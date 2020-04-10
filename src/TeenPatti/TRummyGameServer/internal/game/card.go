@@ -44,8 +44,8 @@ func (this *GMgrCard) InitCards() {
 	//两副52张牌加两张小王
 	this.MVCard = []Poker.CardBase{}
 	this.InitNoKingCards()
-	//this.InitNoKingCards()
-	//this.MVCard = append(this.MVCard, Poker.CardBase{Card: Poker.Card_King_1}, Poker.CardBase{Card: Poker.Card_King_1})
+	this.InitNoKingCards()
+	this.MVCard = append(this.MVCard, Poker.CardBase{Card: Poker.Card_King_1}, Poker.CardBase{Card: Poker.Card_King_1})
 }
 
 func (this *GMgrCard) SendCard(num int) (sendCards []GCard) {

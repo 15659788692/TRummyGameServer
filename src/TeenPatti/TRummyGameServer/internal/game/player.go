@@ -202,5 +202,7 @@ func (p *Player) ExitDesk() {
 	p.isBanker = false
 	p.sitdown = false
 	p.desk = nil
+	p.IsKing = false
+	p.disconnect = false
 	p.InitPlayer()
 }

@@ -65,7 +65,9 @@ func (m *TRManager) AfterInit() {
 				if !ok || p.session == nil {
 					logger.Errorf("玩家%d不在线", uid)
 				}
-				p.session.Close()
+				if p.desk != nil {
+					p.session.Close()
+				}
 				logger.Infof("踢出玩家, UID=%d", uid)
 
 			case uid := <-m.chReset:

@@ -203,11 +203,8 @@ func (this *TRDeskManager) JoinDesk(s *session.Session, data *protocol.JoinDeskR
 	logger.Println("收到加入桌子请求", data)
 	//检测消息
 	p, err := this.checkSessionAuther(s)
-
 	if err != nil {
-
 		logger.Warnf("JoinDesk Error:", s.UID())
-
 		return s.Response(deskNotAutherSession)
 	}
 	isReJoin := false
@@ -358,7 +355,7 @@ func (this *TRDeskManager) GiveUp(s *session.Session, msg *protocol.GGiveUpReque
 	log.Println("玩家请求弃牌！")
 	p.desk.Mutex.Lock()
 	defer p.desk.Mutex.Unlock()
-	return p.desk.GiveUp(p, false, msg)
+	return p.desk.GiveUp(p, false, msg, false)
 }
 
 //请求出牌记录
@@ -382,4 +379,26 @@ func (this *TRDeskManager) OutCardRecord(s *session.Session, msg *protocol.GOutC
 	p.desk.Mutex.Lock()
 	defer p.desk.Mutex.Unlock()
 	return p.desk.OutCardRecord(p)
+}
+
+//退出桌子
+func (this *TRDeskManager) ExitDesk(s *session.Session, msg *protocol.GExitDeskRequect) error {
+	logger.Println("收到退出请求", msg)
+	p, err := this.checkSessionAuther(s)
+	if err != nil {
+		logger.Warnf("ExitDesk Error:", s.UID())
+		return s.Response(&protocol.GExitDeskResponse{
+			Success: false,
+		})
+	}
+	//检测玩家是否在桌子中
+	if p.desk == nil {
+		logger.Debug("ExitDesk Error:", s.UID())
+		return s.Response(&protocol.GExitDeskResponse{
+			Success: false,
+		})
+	}
+	p.desk.Mutex.Lock()
+	defer p.desk.Mutex.Unlock()
+	return p.desk.ExitDeskRequect(p, msg)
 }

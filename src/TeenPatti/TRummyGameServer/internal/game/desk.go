@@ -37,7 +37,7 @@ const (
 
 //游戏状态时间
 const (
-	GameStatePlayAVTime    = 2
+	GameStatePlayAVTime    = 1
 	GameStateStettleAVTime = 3
 )
 
@@ -351,15 +351,17 @@ func (this *Desk) start(interface{}) {
 		for i := 0; i < this.Config.FullPlayerNum; i++ {
 			if this.doingPlayers[int32(i)] != nil {
 				this.BankerId = this.doingPlayers[int32(i)].seatPos
+				break
 			}
 		}
 	} else if this.isFirstRound {
 		this.isFirstRound = false
 	} else {
-		for i := 0; i < this.Config.FullPlayerNum; i++ {
+		for i := 1; i < this.Config.FullPlayerNum; i++ {
 			bankernext := (this.BankerId + int32(i)) % int32(this.Config.FullPlayerNum)
 			if this.doingPlayers[bankernext] != nil {
 				this.BankerId = bankernext
+				break
 			}
 		}
 	}
@@ -483,7 +485,7 @@ func (this *Desk) PlayeroperOutTime(interface{}) {
 		log.Println("玩家操作超时弃牌！")
 		_ = this.GiveUp(p, true, &protocol.GGiveUpRequect{
 			Cards: [][]int32{this.GCardToInt32(p.HandCards)},
-		})
+		}, false)
 		this.ShowCard = GCard{}
 		this.ShowPlayer = -1
 		return
@@ -713,6 +715,7 @@ func (this *Desk) ShowCards(p *Player, msg *protocol.GSetHandCardRequest) error 
 		})
 	}
 	//检测是否是自己的手牌
+	cardnum := 0
 	for _, v := range msg.CardsSets {
 		if !p.IsMyHandCard(v.Cards) {
 			return p.session.Response(&protocol.GSetHandCardResponse{
@@ -720,6 +723,7 @@ func (this *Desk) ShowCards(p *Player, msg *protocol.GSetHandCardRequest) error 
 				Error:   "组牌错误！",
 			})
 		}
+		cardnum += len(v.Cards)
 	}
 	//处理发过来的牌组类型
 	msgResponse := protocol.GSetHandCardResponse{}
@@ -751,7 +755,7 @@ func (this *Desk) ShowCards(p *Player, msg *protocol.GSetHandCardRequest) error 
 			CardsNum:   int32(this.CardMgr.GetLeftCardCount()),
 		})
 		this.ClearTimer()
-		_ = this.GiveUp(p, true, &protocol.GGiveUpRequect{Cards: this.CardsSetToInt32(p.CardsSet)})
+		_ = this.GiveUp(p, true, &protocol.GGiveUpRequect{Cards: this.CardsSetToInt32(p.CardsSet)}, false)
 		this.ShowCard = GCard{}
 		this.ShowPlayer = -1
 		return err
@@ -847,6 +851,16 @@ func (this *Desk) Settle(p *Player, msg *protocol.GSettleRequect, isOutTime bool
 		show = append(show, s...)
 		tcards = append(tcards, s)
 	}
+	//检测牌数
+	if len(p.HandCards) != len(show) {
+		err = p.session.Response(&protocol.GSettleResponse{
+			LoseCoins:   0,
+			Error:       "发过来的牌数不对！",
+			SettleCoins: this.SettleCoins,
+			MyCoins:     p.Coins,
+		})
+		return
+	}
 	//检验发过来的牌组是否都是玩家的手牌
 	this.CardMgr.QuickSortCLV(show)
 	this.CardMgr.QuickSortCLV(p.HandCards)
@@ -941,14 +955,13 @@ func (this *Desk) Settle(p *Player, msg *protocol.GSettleRequect, isOutTime bool
 	this.gameState = GameStateStettleAV
 	this.ClearTimer()
 	this.AddTimer(GameStateStettleAV, GameStateStettleAVTime, this.SettleAV, nil)
-
 	return
 }
 func (this *Desk) SettleAV(interface{}) {
 	winPlayer := this.doingPlayers[this.WinPlayerId]
 	this.gameState = GameStateEnd
 	this.ClearTimer()
-	this.AddTimer(GameStateEnd, this.Config.GameStateTime[GameStateEnd], this.GameEnd, nil)
+	this.AddTimer(GameStateEnd, this.Config.GameStateTime[GameStateEnd]+GameStateStettleAVTime, this.GameEnd, nil)
 	this.group.Broadcast(NoticeGameState, &protocol.GGameStateNotice{
 		GameState: int32(this.gameState),
 		Time:      int32(this.GetTimerNum(this.gameState)),
@@ -966,17 +979,17 @@ func (this *Desk) SettleAV(interface{}) {
 		WinCoins:    this.SettleCoins,
 		SettleCoins: 0,
 	})
-	this.group.Broadcast(NoticeEndInfo, &this.GameRecord)
+	this.AddTimer(GameStateStettleAV, GameStateStettleAVTime, this.EndInfo, nil)
 }
 
 //放弃
-func (this *Desk) GiveUp(p *Player, isOutTime bool, msg *protocol.GGiveUpRequect) error {
-	//不是自己的回合不能弃牌
-	if this.OperateId != p.seatPos {
-		return p.session.Response(&protocol.GGiveUpResponse{
-			Success: false,
-		})
-	}
+func (this *Desk) GiveUp(p *Player, isOutTime bool, msg *protocol.GGiveUpRequect, IsExitDesk bool) error {
+	////不是自己的回合不能弃牌
+	//if this.OperateId != p.seatPos {
+	//	return p.session.Response(&protocol.GGiveUpResponse{
+	//		Success: false,
+	//	})
+	//}
 	//检测牌是否是自己的手牌
 	var tCard []int32
 	for _, v := range msg.Cards {
@@ -1024,13 +1037,15 @@ func (this *Desk) GiveUp(p *Player, isOutTime bool, msg *protocol.GGiveUpRequect
 	msgNotice.Point = p.Point
 	var err error
 	if isOutTime {
-		p.session.Push(PushLoseGame, &protocol.GGiveUpResponse{
-			Success:     true,
-			Coins:       coins,
-			PlayerCoins: p.Coins,
-			PointNum:    p.Point,
-			TotalCoins:  this.SettleCoins,
-		})
+		if !IsExitDesk {
+			p.session.Push(PushLoseGame, &protocol.GGiveUpResponse{
+				Success:     true,
+				Coins:       coins,
+				PlayerCoins: p.Coins,
+				PointNum:    p.Point,
+				TotalCoins:  this.SettleCoins,
+			})
+		}
 	} else {
 		err = p.session.Response(&protocol.GGiveUpResponse{
 			Success:     true,
@@ -1080,11 +1095,16 @@ func (this *Desk) GiveUp(p *Player, isOutTime bool, msg *protocol.GGiveUpRequect
 		}}, this.GameRecord.EndInfo...)
 		this.gameState = GameStateAbort
 		this.ClearTimer()
-		this.AddTimer(GameStateAbort, this.Config.GameStateTime[GameStateAbort], this.GameEnd, nil)
-		this.group.Broadcast(NoticeGameState, &protocol.GGameStateNotice{
+		this.AddTimer(GameStateAbort, this.Config.GameStateTime[GameStateAbort]+GameStateStettleAVTime*2, this.GameEnd, nil)
+		this.group.Multicast(NoticeGameState, &protocol.GGameStateNotice{
 			GameState: int32(this.gameState),
 			Time:      int32(this.GetTimerNum(this.gameState)),
 			TotalTime: int32(this.Config.GameStateTime[this.gameState]),
+		}, func(s *session.Session) bool {
+			if s == p.session && IsExitDesk {
+				return false
+			}
+			return true
 		})
 		winPlayer.session.Push(PushWinGame, &protocol.GGiveUpResponse{
 			Success:     true,
@@ -1093,6 +1113,7 @@ func (this *Desk) GiveUp(p *Player, isOutTime bool, msg *protocol.GGiveUpRequect
 			PointNum:    winPlayer.Point,
 			TotalCoins:  0,
 		})
+
 		this.group.Multicast(NoticeGameWin, &protocol.GPlayerWinNotice{
 			SeatId:      this.WinPlayerId,
 			WinCoins:    this.SettleCoins,
@@ -1103,11 +1124,11 @@ func (this *Desk) GiveUp(p *Player, isOutTime bool, msg *protocol.GGiveUpRequect
 			}
 			return true
 		})
-		this.group.Broadcast(NoticeEndInfo, &this.GameRecord)
+		this.gameState = GameStateStettleAV
+		this.AddTimer(GameStateStettleAV, GameStateStettleAVTime*2, this.EndInfo, nil)
 		return err
 	}
 	this.ClearTimer()
-	this.gameState = GameStatePlayAV
 	this.AddTimer(GameStatePlayAV, GameStatePlayAVTime, this.OpertionNotice, nil)
 	return err
 }
@@ -1488,4 +1509,24 @@ func (this *Desk) ExitDesk(p *Player) bool {
 	}
 
 	return true
+}
+
+func (this *Desk) ExitDeskRequect(p *Player, msg *protocol.GExitDeskRequect) error {
+	err := p.session.Response(&protocol.GExitDeskResponse{
+		Success: true,
+		Type:    msg.Type,
+	})
+	if p.isJoin {
+		this.GiveUp(p, true, &protocol.GGiveUpRequect{
+			Cards: [][]int32{this.GCardToInt32(p.HandCards)},
+		}, true)
+	}
+	this.ExitDesk(p)
+	p.ExitDesk()
+	//
+	return err
+}
+
+func (this *Desk) EndInfo(interface{}) {
+	this.group.Broadcast(NoticeEndInfo, &this.GameRecord)
 }

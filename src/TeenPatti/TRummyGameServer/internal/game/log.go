@@ -10,7 +10,7 @@ import (
 var log = logrus.New()
 
 func init() {
-	filename := "./log/" + time.Now().Format("20060102150405") + ".log"
+	filename := time.Now().Format("20060102150405") + ".log"
 	file, err := os.OpenFile(filename, os.O_CREATE|os.O_WRONLY, 0666)
 	if err == nil {
 		fmt.Println("日志文件创建成功！")

@@ -1,0 +1,13 @@
+time="2020-04-10T19:15:18+08:00" level=info msg="game service starup" component=game
+time="2020-04-10T19:15:18+08:00" level=info msg="The current server running in singleton mode" component=RummyGame
+time="2020-04-10T19:15:18+08:00" level=info msg="type:recviver: *game.TRManager &{{} 0xc0000261c0 map[] 0xc000178000 0xc0001780a0}" component=RummyGame
+time="2020-04-10T19:15:18+08:00" level=info msg="Register local handler TRManager.Login" component=RummyGame
+time="2020-04-10T19:15:18+08:00" level=info msg="type:recviver: *game.TRDeskManager &{{} map[] map[]}" component=RummyGame
+time="2020-04-10T19:15:18+08:00" level=info msg="Register local handler TRDeskManager.OutCardRecord" component=RummyGame
+time="2020-04-10T19:15:18+08:00" level=info msg="Register local handler TRDeskManager.Settle" component=RummyGame
+time="2020-04-10T19:15:18+08:00" level=info msg="Register local handler TRDeskManager.ShowCard" component=RummyGame
+time="2020-04-10T19:15:18+08:00" level=info msg="Register local handler TRDeskManager.ExitDesk" component=RummyGame
+time="2020-04-10T19:15:18+08:00" level=info msg="Register local handler TRDeskManager.GiveUp" component=RummyGame
+time="2020-04-10T19:15:18+08:00" level=info msg="Register local handler TRDeskManager.JoinDesk" component=RummyGame
+time="2020-04-10T19:15:18+08:00" level=info msg="Register local handler TRDeskManager.OperCard" component=RummyGame
+time="2020-04-10T19:15:18+08:00" level=info msg="Startup *Nano gate server* ___8go_build_TeenPatti_TRummyGameServer.exe, client address: :3000, service address: :3000" component=RummyGame

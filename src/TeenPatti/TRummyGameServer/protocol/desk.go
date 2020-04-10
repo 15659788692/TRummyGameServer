@@ -189,3 +189,13 @@ type GOutCardRecordResponse struct {
 	Success    bool      //是否成功
 	CardRecord [][]int32 //出牌记录
 }
+
+//退出桌子
+type GExitDeskRequect struct {
+	Type int32
+}
+
+type GExitDeskResponse struct {
+	Success bool  //是否成功
+	Type    int32 //1.退出到大厅  2.切换桌子
+}

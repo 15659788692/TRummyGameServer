@@ -1,0 +1,122 @@
+time="2020-04-10T18:48:19+08:00" level=info msg="game service starup" component=game
+time="2020-04-10T18:48:19+08:00" level=info msg="The current server running in singleton mode" component=RummyGame
+time="2020-04-10T18:48:19+08:00" level=info msg="type:recviver: *game.TRManager &{{} 0xc000170100 map[] 0xc00017e000 0xc00017e0a0}" component=RummyGame
+time="2020-04-10T18:48:19+08:00" level=info msg="Register local handler TRManager.Login" component=RummyGame
+time="2020-04-10T18:48:19+08:00" level=info msg="type:recviver: *game.TRDeskManager &{{} map[] map[]}" component=RummyGame
+time="2020-04-10T18:48:19+08:00" level=info msg="Register local handler TRDeskManager.Settle" component=RummyGame
+time="2020-04-10T18:48:19+08:00" level=info msg="Register local handler TRDeskManager.ShowCard" component=RummyGame
+time="2020-04-10T18:48:19+08:00" level=info msg="Register local handler TRDeskManager.ExitDesk" component=RummyGame
+time="2020-04-10T18:48:19+08:00" level=info msg="Register local handler TRDeskManager.GiveUp" component=RummyGame
+time="2020-04-10T18:48:19+08:00" level=info msg="Register local handler TRDeskManager.JoinDesk" component=RummyGame
+time="2020-04-10T18:48:19+08:00" level=info msg="Register local handler TRDeskManager.OperCard" component=RummyGame
+time="2020-04-10T18:48:19+08:00" level=info msg="Register local handler TRDeskManager.OutCardRecord" component=RummyGame
+time="2020-04-10T18:48:19+08:00" level=info msg="Startup *Nano gate server* ___3go_build_TeenPatti_TRummyGameServer.exe, client address: :3000, service address: :3000" component=RummyGame
+time="2020-04-10T18:48:24+08:00" level=info msg="New session established: Remote=192.168.0.107:13381, LastTime=1586515704" component=RummyGame
+time="2020-04-10T18:48:24+08:00" level=info msg="Session handshake Id=2, Remote=192.168.0.107:13381" component=RummyGame
+time="2020-04-10T18:48:24+08:00" level=info msg="Receive handshake ACK Id=2, Remote=192.168.0.107:13381" component=RummyGame
+time="2020-04-10T18:48:24+08:00" level=info msg="UID=0, Message={Request TRManager.Login (204bytes)}, Data=&{Version:Version1.0 Token:eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE1ODY1ODc0NDEsImlkIjoyMDAsIm9yaWdfaWF0IjoxNTg2NTE1NDQxLCJyb2xlIjoxfQ._O-ByCT-zeQ0OFOMNFNCHhb5-5C0N5dLWmVfp5ALA3g Uid:200}" component=RummyGame
+time="2020-04-10T18:48:24+08:00" level=info msg="localProcess service: TRManager" component=RummyGame
+time="2020-04-10T18:48:24+08:00" level=info msg="&{13378752914391144  zH2RkeRFQ   10000 1000 200 0 1586515441 0 GUEST_200 1585811158 1 0 0}"
+time="2020-04-10T18:48:24+08:00" level=info msg="玩家的信息: &{13378752914391144  zH2RkeRFQ   10000 1000 200 0 1586515441 0 GUEST_200 1585811158 1 0 0}"
+time="2020-04-10T18:48:24+08:00" level=info msg="Login:Uid:  Id 0 2" component=game
+time="2020-04-10T18:48:24+08:00" level=info msg="玩家: 200不在线，创建新的玩家 :"
+time="2020-04-10T18:48:24+08:00" level=info msg="Add session to group _SYSTEM_MESSAGE_BROADCAST, ID=2, UID=200" component=RummyGame
+time="2020-04-10T18:48:24+08:00" level=info msg="agent.Response***************************** " component=RummyGame
+time="2020-04-10T18:48:24+08:00" level=info msg="Type=Response, ID=2, UID=200, MID=1, Data=&{Success:true Uid:200 Nickname:GUEST_200 HeadUrl: Sex:1 Error:}" component=RummyGame
+time="2020-04-10T18:48:24+08:00" level=info msg="UID=200, Message={Request TRDeskManager.JoinDesk (34bytes)}, Data=&{Uid:200 NickName:GUEST_200}" component=RummyGame
+time="2020-04-10T18:48:24+08:00" level=info msg="localProcess service: TRDeskManager" component=RummyGame
+time="2020-04-10T18:48:24+08:00" level=info msg="收到加入桌子请求 &{200 GUEST_200}" component=game
+time="2020-04-10T18:48:24+08:00" level=info msg="new desk: 715123" component=game
+time="2020-04-10T18:48:24+08:00" level=info msg="GUEST_200 加入房间！"
+time="2020-04-10T18:48:24+08:00" level=info msg="Multicast Rummy.NoticePlayerState, Data=&{SeatId:0 PlayerState:1 PlayerInfo:{SeatPos:0 Nickname:GUEST_200 Sex:1 HeadUrl: Score:0 StarNum:0 IsBanker:false IsKing:false Sitdown:true LiXian:false Show:false IsSettle:false Coins:0}}" component=RummyGame
+time="2020-04-10T18:48:24+08:00" level=info msg="Add session to group cb56bb34-6b66-4dad-9c7c-86f791892198, ID=2, UID=200" component=RummyGame
+time="2020-04-10T18:48:24+08:00" level=info msg="agent.Response***************************** " component=RummyGame
+time="2020-04-10T18:48:24+08:00" level=info msg="Type=Response, ID=2, UID=200, MID=2, Data=&{Success:true DeskInfo:{PointValue:100 DecksNum:2 MaxWining:40000 Maxlosing:8000 SettleCoins:0 GameState:0 GameStateTime:0 TotalStateTime:0 WildCard:0 ShowCard:0 PublicCard:0 CardsNum:106 OperSeatId:-1 BankerSeatId:0 KingSeatId:0 FirstSeatId:-1 UserSeatId:0 WinPlayerId:0 HandCard:[] PlayersInfo:[{SeatPos:0 Nickname:GUEST_200 Sex:1 HeadUrl: Score:0 StarNum:0 IsBanker:false IsKing:true Sitdown:true LiXian:false Show:false IsSettle:false Coins:105320}]} Code:0 Error:}" component=RummyGame
+time="2020-04-10T18:48:27+08:00" level=info msg="New session established: Remote=192.168.0.107:13383, LastTime=1586515707" component=RummyGame
+time="2020-04-10T18:48:27+08:00" level=info msg="Session handshake Id=3, Remote=192.168.0.107:13383" component=RummyGame
+time="2020-04-10T18:48:27+08:00" level=info msg="Receive handshake ACK Id=3, Remote=192.168.0.107:13383" component=RummyGame
+time="2020-04-10T18:48:28+08:00" level=info msg="UID=0, Message={Request TRManager.Login (204bytes)}, Data=&{Version:Version1.0 Token:eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE1ODY1ODc0NDQsImlkIjoyMDEsIm9yaWdfaWF0IjoxNTg2NTE1NDQ0LCJyb2xlIjoxfQ.yYZ4WvJf_L46IdOmP1cg89CFPJi79yNBdTtbXBF02mU Uid:201}" component=RummyGame
+time="2020-04-10T18:48:28+08:00" level=info msg="localProcess service: TRManager" component=RummyGame
+time="2020-04-10T18:48:28+08:00" level=info msg="&{13378755363864680  zH2UQQBD6   10000 1000 201 0 1586515444 0 GUEST_201 1585811159 1 0 0}"
+time="2020-04-10T18:48:28+08:00" level=info msg="玩家的信息: &{13378755363864680  zH2UQQBD6   10000 1000 201 0 1586515444 0 GUEST_201 1585811159 1 0 0}"
+time="2020-04-10T18:48:28+08:00" level=info msg="Login:Uid:  Id 0 3" component=game
+time="2020-04-10T18:48:28+08:00" level=info msg="玩家: 201不在线，创建新的玩家 :"
+time="2020-04-10T18:48:28+08:00" level=info msg="Add session to group _SYSTEM_MESSAGE_BROADCAST, ID=3, UID=201" component=RummyGame
+time="2020-04-10T18:48:28+08:00" level=info msg="agent.Response***************************** " component=RummyGame
+time="2020-04-10T18:48:28+08:00" level=info msg="Type=Response, ID=3, UID=201, MID=1, Data=&{Success:true Uid:201 Nickname:GUEST_201 HeadUrl: Sex:1 Error:}" component=RummyGame
+time="2020-04-10T18:48:28+08:00" level=info msg="UID=201, Message={Request TRDeskManager.JoinDesk (34bytes)}, Data=&{Uid:201 NickName:GUEST_201}" component=RummyGame
+time="2020-04-10T18:48:28+08:00" level=info msg="localProcess service: TRDeskManager" component=RummyGame
+time="2020-04-10T18:48:28+08:00" level=info msg="收到加入桌子请求 &{201 GUEST_201}" component=game
+time="2020-04-10T18:48:28+08:00" level=info msg="GUEST_201 加入房间！"
+time="2020-04-10T18:48:28+08:00" level=info msg="Multicast Rummy.NoticePlayerState, Data=&{SeatId:1 PlayerState:1 PlayerInfo:{SeatPos:1 Nickname:GUEST_201 Sex:1 HeadUrl: Score:0 StarNum:0 IsBanker:false IsKing:false Sitdown:true LiXian:false Show:false IsSettle:false Coins:0}}" component=RummyGame
+time="2020-04-10T18:48:28+08:00" level=info msg="Type=Push, ID=2, UID=200, Route=Rummy.NoticePlayerState, Data=223bytes" component=RummyGame
+time="2020-04-10T18:48:28+08:00" level=info msg="agent  Push -- ip : Rummy.NoticePlayerState 192.168.0.107:13381" component=RummyGame
+time="2020-04-10T18:48:28+08:00" level=info msg="Add session to group cb56bb34-6b66-4dad-9c7c-86f791892198, ID=3, UID=201" component=RummyGame
+time="2020-04-10T18:48:28+08:00" level=info msg="agent.Response***************************** " component=RummyGame
+time="2020-04-10T18:48:28+08:00" level=info msg="Type=Response, ID=3, UID=201, MID=2, Data=&{Success:true DeskInfo:{PointValue:100 DecksNum:2 MaxWining:40000 Maxlosing:8000 SettleCoins:0 GameState:0 GameStateTime:0 TotalStateTime:0 WildCard:0 ShowCard:0 PublicCard:0 CardsNum:106 OperSeatId:-1 BankerSeatId:0 KingSeatId:0 FirstSeatId:-1 UserSeatId:1 WinPlayerId:0 HandCard:[] PlayersInfo:[{SeatPos:0 Nickname:GUEST_200 Sex:1 HeadUrl: Score:0 StarNum:0 IsBanker:false IsKing:true Sitdown:true LiXian:false Show:false IsSettle:false Coins:105320} {SeatPos:1 Nickname:GUEST_201 Sex:1 HeadUrl: Score:0 StarNum:0 IsBanker:false IsKing:false Sitdown:true LiXian:false Show:false IsSettle:false Coins:278275}]} Code:0 Error:}" component=RummyGame
+time="2020-04-10T18:48:28+08:00" level=info msg="Broadcast Rummy.NoticeGameState, Data=&{GameState:1 Time:7 TotalTime:7 OperateId:0}" component=RummyGame
+time="2020-04-10T18:48:28+08:00" level=info msg="Type=Push, ID=2, UID=200, Route=Rummy.NoticeGameState, Data=52bytes" component=RummyGame
+time="2020-04-10T18:48:28+08:00" level=info msg="agent  Push -- ip : Rummy.NoticeGameState 192.168.0.107:13381" component=RummyGame
+time="2020-04-10T18:48:28+08:00" level=info msg="Type=Push, ID=3, UID=201, Route=Rummy.NoticeGameState, Data=52bytes" component=RummyGame
+time="2020-04-10T18:48:28+08:00" level=info msg="agent  Push -- ip : Rummy.NoticeGameState 192.168.0.107:13383" component=RummyGame
+time="2020-04-10T18:48:34+08:00" level=info msg="游戏开始！//////////////////////////////////"
+time="2020-04-10T18:48:34+08:00" level=info msg="发牌!/////////////////////////////////////"
+time="2020-04-10T18:48:34+08:00" level=info msg="GUEST_200 玩家手牌：方块2方块3方块4方块5方块6方块7方块8方块9方块10方块11方块12方块13方块1"
+time="2020-04-10T18:48:34+08:00" level=info msg="GUEST_201 玩家手牌：方块3方块3方块9方块13梅花6梅花10梅花10梅花11梅花12红桃11黑桃6黑桃9黑桃10"
+time="2020-04-10T18:48:34+08:00" level=info msg="庄家：GUEST_200"
+time="2020-04-10T18:48:34+08:00" level=info msg="首家：GUEST_201"
+time="2020-04-10T18:48:34+08:00" level=info msg="Type=Push, ID=2, UID=200, Route=Rummy.PushGameStrat, Data=&{PointValue:100 DecksNum:2 MaxWining:40000 Maxlosing:8000 SettleCoins:0 GameState:2 GameStateTime:0 TotalStateTime:9 WildCard:0 ShowCard:0 PublicCard:0 CardsNum:93 OperSeatId:1 BankerSeatId:0 KingSeatId:0 FirstSeatId:1 UserSeatId:0 WinPlayerId:0 HandCard:[{Cards:[2 3 4 5 6 7 8 9 10 11 12 13 1] Type:0 Point:0}] PlayersInfo:[{SeatPos:0 Nickname:GUEST_200 Sex:1 HeadUrl: Score:0 StarNum:0 IsBanker:false IsKing:true Sitdown:true LiXian:false Show:false IsSettle:false Coins:105320} {SeatPos:1 Nickname:GUEST_201 Sex:1 HeadUrl: Score:0 StarNum:0 IsBanker:false IsKing:false Sitdown:true LiXian:false Show:false IsSettle:false Coins:278275}]}" component=RummyGame
+time="2020-04-10T18:48:34+08:00" level=info msg="agent  Push -- ip : Rummy.PushGameStrat 192.168.0.107:13381" component=RummyGame
+time="2020-04-10T18:48:34+08:00" level=info msg="Type=Push, ID=3, UID=201, Route=Rummy.PushGameStrat, Data=&{PointValue:100 DecksNum:2 MaxWining:40000 Maxlosing:8000 SettleCoins:0 GameState:2 GameStateTime:0 TotalStateTime:9 WildCard:0 ShowCard:0 PublicCard:0 CardsNum:93 OperSeatId:1 BankerSeatId:0 KingSeatId:0 FirstSeatId:1 UserSeatId:1 WinPlayerId:0 HandCard:[{Cards:[3 3 9 13] Type:0 Point:0} {Cards:[22 26 26 27 28] Type:0 Point:0} {Cards:[43] Type:0 Point:0} {Cards:[54 57 58] Type:0 Point:0}] PlayersInfo:[{SeatPos:0 Nickname:GUEST_200 Sex:1 HeadUrl: Score:0 StarNum:0 IsBanker:false IsKing:true Sitdown:true LiXian:false Show:false IsSettle:false Coins:105320} {SeatPos:1 Nickname:GUEST_201 Sex:1 HeadUrl: Score:0 StarNum:0 IsBanker:false IsKing:false Sitdown:true LiXian:false Show:false IsSettle:false Coins:278275}]}" component=RummyGame
+time="2020-04-10T18:48:34+08:00" level=info msg="agent  Push -- ip : Rummy.PushGameStrat 192.168.0.107:13383" component=RummyGame
+time="2020-04-10T18:48:34+08:00" level=info msg="万能牌：红桃8"
+time="2020-04-10T18:48:34+08:00" level=info msg="第一张公摊牌： 红桃12"
+time="2020-04-10T18:48:34+08:00" level=info msg="Broadcast Rummy.NoticeGameState, Data=&{GameState:2 Time:0 TotalTime:9 OperateId:0}" component=RummyGame
+time="2020-04-10T18:48:34+08:00" level=info msg="Type=Push, ID=2, UID=200, Route=Rummy.NoticeGameState, Data=52bytes" component=RummyGame
+time="2020-04-10T18:48:34+08:00" level=info msg="agent  Push -- ip : Rummy.NoticeGameState 192.168.0.107:13381" component=RummyGame
+time="2020-04-10T18:48:34+08:00" level=info msg="Type=Push, ID=3, UID=201, Route=Rummy.NoticeGameState, Data=52bytes" component=RummyGame
+time="2020-04-10T18:48:34+08:00" level=info msg="agent  Push -- ip : Rummy.NoticeGameState 192.168.0.107:13383" component=RummyGame
+time="2020-04-10T18:48:34+08:00" level=info msg="Type=Push, ID=2, UID=200, Route=Rummy.PushSendCard, Data=&{HandCards:[2 3 4 5 6 7 8 9 10 11 12 13 1] WildCard:40 FristCard:44}" component=RummyGame
+time="2020-04-10T18:48:34+08:00" level=info msg="agent  Push -- ip : Rummy.PushSendCard 192.168.0.107:13381" component=RummyGame
+time="2020-04-10T18:48:34+08:00" level=info msg="Type=Push, ID=3, UID=201, Route=Rummy.PushSendCard, Data=&{HandCards:[3 3 9 13 22 26 26 27 28 43 54 57 58] WildCard:40 FristCard:44}" component=RummyGame
+time="2020-04-10T18:48:34+08:00" level=info msg="agent  Push -- ip : Rummy.PushSendCard 192.168.0.107:13383" component=RummyGame
+time="2020-04-10T18:48:43+08:00" level=info msg="Broadcast Rummy.NoticeGameState, Data=&{GameState:3 Time:30 TotalTime:30 OperateId:1}" component=RummyGame
+time="2020-04-10T18:48:43+08:00" level=info msg="Type=Push, ID=2, UID=200, Route=Rummy.NoticeGameState, Data=54bytes" component=RummyGame
+time="2020-04-10T18:48:43+08:00" level=info msg="agent  Push -- ip : Rummy.NoticeGameState 192.168.0.107:13381" component=RummyGame
+time="2020-04-10T18:48:43+08:00" level=info msg="Type=Push, ID=3, UID=201, Route=Rummy.NoticeGameState, Data=54bytes" component=RummyGame
+time="2020-04-10T18:48:43+08:00" level=info msg="agent  Push -- ip : Rummy.NoticeGameState 192.168.0.107:13383" component=RummyGame
+time="2020-04-10T18:48:43+08:00" level=info msg="Broadcast Rummy.PushRoundInfo, Data=&{GiveUpCoins:2000}" component=RummyGame
+time="2020-04-10T18:48:43+08:00" level=info msg="Type=Push, ID=2, UID=200, Route=Rummy.PushRoundInfo, Data=20bytes" component=RummyGame
+time="2020-04-10T18:48:43+08:00" level=info msg="agent  Push -- ip : Rummy.PushRoundInfo 192.168.0.107:13381" component=RummyGame
+time="2020-04-10T18:48:43+08:00" level=info msg="Type=Push, ID=3, UID=201, Route=Rummy.PushRoundInfo, Data=20bytes" component=RummyGame
+time="2020-04-10T18:48:43+08:00" level=info msg="agent  Push -- ip : Rummy.PushRoundInfo 192.168.0.107:13383" component=RummyGame
+time="2020-04-10T18:48:43+08:00" level=info msg="当前轮到： GUEST_201"
+time="2020-04-10T18:48:43+08:00" level=info msg="UID=200, Message={Request TRDeskManager.ShowCard (67bytes)}, Data=&{CardsSets:[{Cards:[1 2 3 4 5 6 7 8 9 10 11 12 13] Type:0 Point:0}] Phase:0}" component=RummyGame
+time="2020-04-10T18:48:43+08:00" level=info msg="localProcess service: TRDeskManager" component=RummyGame
+time="2020-04-10T18:48:43+08:00" level=info msg="收到组牌请求 &{[{[1 2 3 4 5 6 7 8 9 10 11 12 13] 0 0}] 0}" component=game
+time="2020-04-10T18:48:43+08:00" level=info msg="整理牌请求：&{[{[1 2 3 4 5 6 7 8 9 10 11 12 13] 0 0}] 0} "
+time="2020-04-10T18:48:43+08:00" level=info msg="整理牌应答：{true [{[1 2 3 4 5 6 7 8 9 10 11 12 13] 7 0}] 0 true 0 } "
+time="2020-04-10T18:48:43+08:00" level=info msg="UID=201, Message={Request TRDeskManager.ShowCard (109bytes)}, Data=&{CardsSets:[{Cards:[54 57 58] Type:0 Point:0} {Cards:[43] Type:0 Point:0} {Cards:[22 26 26 27 28] Type:0 Point:0} {Cards:[3 3 9 13] Type:0 Point:0}] Phase:0}" component=RummyGame
+time="2020-04-10T18:48:43+08:00" level=info msg="localProcess service: TRDeskManager" component=RummyGame
+time="2020-04-10T18:48:43+08:00" level=info msg="agent.Response***************************** " component=RummyGame
+time="2020-04-10T18:48:43+08:00" level=info msg="Type=Response, ID=2, UID=200, MID=3, Data=&{Success:true CardsSets:[{Cards:[1 2 3 4 5 6 7 8 9 10 11 12 13] Type:7 Point:0}] TotalPoint:0 IsHu:true Phase:0 Error:}" component=RummyGame
+time="2020-04-10T18:48:43+08:00" level=info msg="收到组牌请求 &{[{[54 57 58] 0 0} {[43] 0 0} {[22 26 26 27 28] 0 0} {[3 3 9 13] 0 0}] 0}" component=game
+time="2020-04-10T18:48:43+08:00" level=info msg="整理牌请求：&{[{[54 57 58] 0 0} {[43] 0 0} {[22 26 26 27 28] 0 0} {[3 3 9 13] 0 0}] 0} "
+time="2020-04-10T18:48:43+08:00" level=info msg="整理牌应答：{true [{[54 57 58] 1 25} {[43] 1 10} {[22 26 26 27 28] 1 46} {[3 3 9 13] 1 25}] 80 false 0 } "
+time="2020-04-10T18:48:43+08:00" level=info msg="agent.Response***************************** " component=RummyGame
+time="2020-04-10T18:48:43+08:00" level=info msg="Type=Response, ID=3, UID=201, MID=3, Data=&{Success:true CardsSets:[{Cards:[54 57 58] Type:1 Point:25} {Cards:[43] Type:1 Point:10} {Cards:[22 26 26 27 28] Type:1 Point:46} {Cards:[3 3 9 13] Type:1 Point:25}] TotalPoint:80 IsHu:false Phase:0 Error:}" component=RummyGame
+time="2020-04-10T18:48:43+08:00" level=info msg="UID=200, Message={Request TRDeskManager.OutCardRecord (2bytes)}, Data=&{}" component=RummyGame
+time="2020-04-10T18:48:43+08:00" level=info msg="localProcess service: TRDeskManager" component=RummyGame
+time="2020-04-10T18:48:43+08:00" level=info msg="收到出牌记录请求 &{}" component=game
+time="2020-04-10T18:48:43+08:00" level=info msg="agent.Response***************************** " component=RummyGame
+time="2020-04-10T18:48:43+08:00" level=info msg="Type=Response, ID=2, UID=200, MID=4, Data=&{Success:true CardRecord:[[] [] [8 12] []]}" component=RummyGame
+time="2020-04-10T18:48:43+08:00" level=info msg="UID=201, Message={Request TRDeskManager.OutCardRecord (2bytes)}, Data=&{}" component=RummyGame
+time="2020-04-10T18:48:43+08:00" level=info msg="localProcess service: TRDeskManager" component=RummyGame
+time="2020-04-10T18:48:43+08:00" level=info msg="收到出牌记录请求 &{}" component=game
+time="2020-04-10T18:48:43+08:00" level=info msg="agent.Response***************************** " component=RummyGame
+time="2020-04-10T18:48:43+08:00" level=info msg="Type=Response, ID=3, UID=201, MID=4, Data=&{Success:true CardRecord:[[] [] [8 12] []]}" component=RummyGame
+time="2020-04-10T18:48:47+08:00" level=info msg="UID=200, Message={Request TRDeskManager.ExitDesk (10bytes)}, Data=&{Type:2}" component=RummyGame
+time="2020-04-10T18:48:47+08:00" level=info msg="localProcess service: TRDeskManager" component=RummyGame
+time="2020-04-10T18:48:47+08:00" level=info msg="收到退出请求 &{2}" component=game
+time="2020-04-10T18:48:52+08:00" level=info msg="agent.Response***************************** " component=RummyGame
+time="2020-04-10T18:48:52+08:00" level=info msg="Type=Response, ID=2, UID=200, MID=5, Data=&{Success:true Type:2}" component=RummyGame
